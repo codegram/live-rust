@@ -5,7 +5,7 @@ use std::io;
 use std::thread::sleep;
 use std::time::{Duration, Instant};
 
-const MAX: i32 = 100;
+const MAX: f64 = 100.0;
 
 #[derive(Debug)]
 struct Stats {
@@ -16,20 +16,20 @@ struct Stats {
 
 #[derive(Debug)]
 struct Stat {
-    value: i32,
+    value: f64,
 }
 
 impl Stat {
-    fn new(value: i32) -> Stat {
+    fn new(value: f64) -> Stat {
         Stat { value }
     }
-    fn increase(&mut self, amount: i32) {
+    fn increase(&mut self, amount: f64) {
         self.value = self.value + amount;
         if self.value > MAX {
             self.value = MAX;
         }
     }
-    fn decrease(&mut self, amount: i32) {
+    fn decrease(&mut self, amount: f64) {
         self.value = self.value - amount;
     }
 }
@@ -40,14 +40,14 @@ fn main() {
     let now = Instant::now();
 
     let mut days: i32;
-    let mut elapsed_time: f64;
+    let mut elapsed_time = now.elapsed().as_secs();
 
     let mut inventory = Vec::new();
 
     let mut stats = Stats {
-        water: Stat::new(50),
-        food: Stat::new(50),
-        energy: Stat::new(50),
+        water: Stat::new(50.0),
+        food: Stat::new(50.0),
+        energy: Stat::new(50.0),
     };
 
     loop {
@@ -60,8 +60,13 @@ fn main() {
             .ok()
             .expect("Failed to read line");
 
-        elapsed_time = now.elapsed().as_secs() as f64;
-        days = (elapsed_time / 60.0).floor() as i32;
+        let current_elapsed_time = now.elapsed().as_secs();
+        let seconds = current_elapsed_time - elapsed_time;
+
+        elapsed_time = now.elapsed().as_secs();
+        days = elapsed_time as i32 / 60;
+
+        decrease_stats(&mut stats, seconds as f64);
 
         match action.trim() {
             "help" => println!("Sorry. You are on your own."),
@@ -77,8 +82,8 @@ fn main() {
             _ => println!("Invalid input"),
         }
 
-        if stats.energy.value <= 0 || stats.food.value <= 0 || stats.water.value <= 0 {
-            println!("You died!");
+        if stats.energy.value <= 0.0 || stats.food.value <= 0.0 || stats.water.value <= 0.0 {
+            println!("You died after {} days", days);
             break;
         }
     }
@@ -92,21 +97,34 @@ fn scavenge(inv: &mut std::vec::Vec<&str>, stats: &mut Stats) {
     sleep(Duration::new(2, 0));
     println!("You found {}", item);
     inv.push(item);
-    stats.energy.decrease(5)
+    stats.energy.decrease(5.0)
 }
 
 fn rest(stats: &mut Stats) {
     println!("Sleeping…");
     sleep(Duration::new(2, 0));
-    stats.energy.increase(10)
+    stats.energy.increase(10.0)
 }
 
 fn eat(stats: &mut Stats) {
     println!("Eating…");
-    stats.food.increase(10)
+    stats.food.increase(10.0)
 }
 
 fn drink(stats: &mut Stats) {
     println!("Drinking…");
-    stats.water.increase(10)
+    stats.water.increase(10.0)
+}
+
+fn decrease_stats(stats: &mut Stats, seconds: f64) {
+    let ratio_energy = 25 as f64 / 60 as f64;
+    let ratio_water = 25 as f64 / 60 as f64;
+    let ratio_food = 15 as f64 / 60 as f64;
+
+    println!("decreasing water for {}", seconds);
+    println!("ratio is {}", ratio_water);
+
+    stats.water.decrease(ratio_water * seconds);
+    stats.food.decrease(ratio_food * seconds);
+    stats.energy.decrease(ratio_energy * seconds);
 }
