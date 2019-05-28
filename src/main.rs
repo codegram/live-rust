@@ -2,6 +2,8 @@ extern crate rand;
 
 use rand::Rng;
 use std::io;
+use std::thread::sleep;
+use std::time::{Duration, Instant};
 
 const MAX: i32 = 100;
 
@@ -24,7 +26,7 @@ impl Stat {
     fn increase(&mut self, amount: i32) {
         self.value = self.value + amount;
         if self.value > MAX {
-            self.value = 100;
+            self.value = MAX;
         }
     }
     fn decrease(&mut self, amount: i32) {
@@ -34,6 +36,11 @@ impl Stat {
 
 fn main() {
     println!("* LIVE *\n\n");
+
+    let now = Instant::now();
+
+    let mut days: i32;
+    let mut elapsed_time: f64;
 
     let mut inventory = Vec::new();
 
@@ -53,14 +60,18 @@ fn main() {
             .ok()
             .expect("Failed to read line");
 
+        elapsed_time = now.elapsed().as_secs() as f64;
+        days = (elapsed_time / 60.0).floor() as i32;
+
         match action.trim() {
             "help" => println!("Sorry. You are on your own."),
-            "sleep" => sleep(&mut stats),
+            "sleep" => rest(&mut stats),
             "scavenge" => scavenge(&mut inventory, &mut stats),
             "inventory" => println!("Items in your backpack: {:?}", inventory),
             "stats" => println!("Current stats: {:?}", stats),
+            "days" => println!("Days survived so far: {}", days),
             "die" => {
-                println!("You died!");
+                println!("You died after {} days", days);
                 break;
             }
             _ => println!("Invalid input"),
@@ -78,13 +89,15 @@ fn scavenge(inv: &mut std::vec::Vec<&str>, stats: &mut Stats) {
     let mut rng = rand::thread_rng();
     let random_idx = rng.gen_range(0, items.len() - 1);
     let item = items[random_idx];
+    sleep(Duration::new(2, 0));
     println!("You found {}", item);
     inv.push(item);
     stats.energy.decrease(5)
 }
 
-fn sleep(stats: &mut Stats) {
+fn rest(stats: &mut Stats) {
     println!("Sleeping…");
+    sleep(Duration::new(2, 0));
     stats.energy.increase(10)
 }
 
