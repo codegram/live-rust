@@ -5,6 +5,10 @@ use std::io;
 use std::thread::sleep;
 use std::time::{Duration, Instant};
 
+mod items;
+
+use crate::items::{Item, SCAVENGEABLE_ITEMS};
+
 const MAX: f64 = 100.0;
 
 #[derive(Debug)]
@@ -89,11 +93,9 @@ fn main() {
     }
 }
 
-fn scavenge(inv: &mut std::vec::Vec<&str>, stats: &mut Stats) {
-    let items = ["water", "berries", "wood", "flint", "string", "clams"];
+fn scavenge(inv: &mut std::vec::Vec<Item>, stats: &mut Stats) {
     let inv_max = 10;
 
-    // const numberOfItems = getters.slotsInInventoryLeft > 3 ? 3 : getters.slotsInInventoryLeft
     let slots_left = inv_max - inv.len();
     let number_of_items = if slots_left < 3 { slots_left } else { 3 };
 
@@ -103,10 +105,10 @@ fn scavenge(inv: &mut std::vec::Vec<&str>, stats: &mut Stats) {
         let mut rng = rand::thread_rng();
         sleep(Duration::new(2, 0));
         stats.energy.decrease(5.0);
-        for number in 0..number_of_items {
-            let random_idx = rng.gen_range(0, items.len() - 1);
-            let item = items[random_idx];
-            println!("You found {}", item);
+        for _number in 0..number_of_items {
+            let random_idx = rng.gen_range(0, SCAVENGEABLE_ITEMS.len() - 1);
+            let item = SCAVENGEABLE_ITEMS[random_idx].clone();
+            println!("You found {:?}", item.name);
             inv.push(item);
         }
     }
