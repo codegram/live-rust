@@ -84,6 +84,18 @@ fn main() {
                 println!("You died after {} days", days);
                 break;
             }
+            "remove" => {
+                println!("What do you want to remove?");
+
+                let mut input = String::new();
+
+                io::stdin()
+                    .read_line(&mut input)
+                    .ok()
+                    .expect("Failed to read line");
+
+                remove_inventory(&mut inventory, input.trim());
+            }
             _ => println!("Invalid input"),
         }
 
@@ -138,4 +150,16 @@ fn decrease_stats(stats: &mut Stats, seconds: f64) {
     stats.water.decrease(ratio_water * seconds);
     stats.food.decrease(ratio_food * seconds);
     stats.energy.decrease(ratio_energy * seconds);
+}
+
+fn remove_inventory(inv: &mut std::vec::Vec<Item>, item_id: &str) {
+    let item_idx = inv.iter().position(|item| item.id == item_id);
+
+    match item_idx {
+        Some(idx) => {
+            inv.remove(idx);
+            println!("Item removed");
+        }
+        None => println!("Item not in inventory"),
+    }
 }
