@@ -63,7 +63,7 @@ fn main() {
         let current_elapsed_time = now.elapsed().as_secs();
         let seconds = current_elapsed_time - elapsed_time;
 
-        elapsed_time = now.elapsed().as_secs();
+        elapsed_time = current_elapsed_time;
         days = elapsed_time as i32 / 60;
 
         decrease_stats(&mut stats, seconds as f64);
@@ -91,13 +91,25 @@ fn main() {
 
 fn scavenge(inv: &mut std::vec::Vec<&str>, stats: &mut Stats) {
     let items = ["water", "berries", "wood", "flint", "string", "clams"];
-    let mut rng = rand::thread_rng();
-    let random_idx = rng.gen_range(0, items.len() - 1);
-    let item = items[random_idx];
-    sleep(Duration::new(2, 0));
-    println!("You found {}", item);
-    inv.push(item);
-    stats.energy.decrease(5.0)
+    let inv_max = 10;
+
+    // const numberOfItems = getters.slotsInInventoryLeft > 3 ? 3 : getters.slotsInInventoryLeft
+    let slots_left = inv_max - inv.len();
+    let number_of_items = if slots_left < 3 { slots_left } else { 3 };
+
+    if number_of_items == 0 {
+        println!("Your inventory is full");
+    } else {
+        let mut rng = rand::thread_rng();
+        sleep(Duration::new(2, 0));
+        stats.energy.decrease(5.0);
+        for number in 0..number_of_items {
+            let random_idx = rng.gen_range(0, items.len() - 1);
+            let item = items[random_idx];
+            println!("You found {}", item);
+            inv.push(item);
+        }
+    }
 }
 
 fn rest(stats: &mut Stats) {
@@ -120,9 +132,6 @@ fn decrease_stats(stats: &mut Stats, seconds: f64) {
     let ratio_energy = 25 as f64 / 60 as f64;
     let ratio_water = 25 as f64 / 60 as f64;
     let ratio_food = 15 as f64 / 60 as f64;
-
-    println!("decreasing water for {}", seconds);
-    println!("ratio is {}", ratio_water);
 
     stats.water.decrease(ratio_water * seconds);
     stats.food.decrease(ratio_food * seconds);
