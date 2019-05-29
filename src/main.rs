@@ -84,6 +84,18 @@ fn main() {
                 println!("You died after {} days", days);
                 break;
             }
+            "consume" => {
+                println!("What do you want to eat/drink?");
+
+                let mut input = String::new();
+
+                io::stdin()
+                    .read_line(&mut input)
+                    .ok()
+                    .expect("Failed to read line");
+
+                consume(&mut inventory, input.trim(), &mut stats);
+            }
             "remove" => {
                 println!("What do you want to remove?");
 
@@ -132,14 +144,22 @@ fn rest(stats: &mut Stats) {
     stats.energy.increase(10.0)
 }
 
-fn eat(stats: &mut Stats) {
-    println!("Eating…");
-    stats.food.increase(10.0)
-}
+fn consume(inv: &mut std::vec::Vec<Item>, item_id: &str, stats: &mut Stats) {
+    let item_idx = inv.iter().position(|item| item.id == item_id);
 
-fn drink(stats: &mut Stats) {
-    println!("Drinking…");
-    stats.water.increase(10.0)
+    match item_idx {
+        Some(idx) => {
+            let item = &inv[idx];
+            if item.consumable {
+                stats.water.increase(item.value.water);
+                stats.food.increase(item.value.food);
+                inv.remove(idx);
+            } else {
+                println!("Item is not consumable");
+            }
+        }
+        None => println!("Item not in inventory"),
+    }
 }
 
 fn decrease_stats(stats: &mut Stats, seconds: f64) {
