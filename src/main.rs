@@ -158,7 +158,7 @@ fn remove_inventory(inv: &mut std::vec::Vec<Item>, item_id: &str) {
     match item_idx {
         Some(idx) => {
             inv.remove(idx);
-            println!("Removed {}", idx);
+            println!("Item removed");
         }
         None => println!("Item not in inventory"),
     }
