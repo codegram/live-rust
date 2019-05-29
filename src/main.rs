@@ -1,5 +1,6 @@
 extern crate rand;
 
+use rand::seq::SliceRandom;
 use rand::Rng;
 use std::io;
 use std::thread::sleep;
@@ -106,8 +107,7 @@ fn scavenge(inv: &mut std::vec::Vec<Item>, stats: &mut Stats) {
         sleep(Duration::new(2, 0));
         stats.energy.decrease(5.0);
         for _number in 0..number_of_items {
-            let random_idx = rng.gen_range(0, SCAVENGEABLE_ITEMS.len() - 1);
-            let item = SCAVENGEABLE_ITEMS[random_idx].clone();
+            let item = SCAVENGEABLE_ITEMS.choose(&mut rng).unwrap().clone();
             println!("You found {:?}", item.name);
             inv.push(item);
         }
