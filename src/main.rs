@@ -40,7 +40,7 @@ impl Stat {
 }
 
 fn main() {
-    println!("* LIVE *\n\n");
+    print_help();
 
     let now = Instant::now();
 
@@ -67,16 +67,12 @@ fn main() {
         decrease_stats(&mut stats, seconds as f64);
 
         match action.trim() {
-            "help" => println!("Sorry. You are on your own."),
+            "help" => print_help(),
             "sleep" => rest(&mut stats),
             "scavenge" => scavenge(&mut inventory, &mut stats),
             "inventory" => println!("Items in your backpack: {:?}", inventory),
             "stats" => println!("Current stats: {:?}", stats),
             "days" => println!("Days survived so far: {}", days),
-            "die" => {
-                println!("You died after {} days", days);
-                break;
-            }
             "consume" => {
                 let input = request_input("What do you want to eat/drink?");
                 consume(&mut inventory, input.trim(), &mut stats);
@@ -85,7 +81,11 @@ fn main() {
                 let input = request_input("What do you want to remove?");
                 remove_inventory(&mut inventory, input.trim());
             }
-            _ => println!("Invalid input"),
+            "die" => {
+                println!("You died after {} days", days);
+                break;
+            }
+            _ => println!("Invalid input. Type 'help' for instructions."),
         }
 
         if stats.energy.value <= 0.0 || stats.food.value <= 0.0 || stats.water.value <= 0.0 {
@@ -102,7 +102,7 @@ fn scavenge(inv: &mut std::vec::Vec<Item>, stats: &mut Stats) {
     let number_of_items = if slots_left < 3 { slots_left } else { 3 };
 
     if number_of_items == 0 {
-        println!("Your inventory is full");
+        println!("Your inventory is full. Remove at least one item to proceed.");
     } else {
         let mut rng = rand::thread_rng();
         sleep(Duration::new(2, 0));
@@ -120,7 +120,8 @@ fn scavenge(inv: &mut std::vec::Vec<Item>, stats: &mut Stats) {
 fn rest(stats: &mut Stats) {
     println!("Sleeping…");
     sleep(Duration::new(2, 0));
-    stats.energy.increase(10.0)
+    stats.energy.increase(35.0);
+    println!("You wake up refreshed");
 }
 
 fn consume(inv: &mut std::vec::Vec<Item>, item_id: &str, stats: &mut Stats) {
@@ -137,7 +138,7 @@ fn consume(inv: &mut std::vec::Vec<Item>, item_id: &str, stats: &mut Stats) {
                 println!("Item is not consumable");
             }
         }
-        None => println!("Item not in inventory"),
+        None => println!("Item not in inventory. Type 'inventory' to list available items."),
     }
 }
 
@@ -149,7 +150,7 @@ fn remove_inventory(inv: &mut std::vec::Vec<Item>, item_id: &str) {
             inv.remove(idx);
             println!("Item removed");
         }
-        None => println!("Item not in inventory"),
+        None => println!("Item not in inventory. Type 'inventory' to list available items."),
     }
 }
 
@@ -174,6 +175,26 @@ fn request_input(prompt: &str) -> String {
         .expect("Failed to read line");
 
     input
+}
+
+fn print_help() {
+    println!("\n*** L I V E ***");
+    println!("How long can you survive in the wilderness?\n");
+    println!("Actions:\n");
+    println!("scavenge:\t Find useful items to survive");
+    println!("\t\t -5 energy, -5 water, -3 food");
+    println!("sleep:\t\t Rest to replenish your energy");
+    println!("\t\t +35 energy");
+    println!("hunt:\t\t COMING SOON"); //Hunt for food and fur to craft equipment
+    println!("\t\t -10 energy, -10 water, -6 food");
+    println!("\nremove:\t\t Remove an item from inventory");
+    println!("consume:\t Consume an item to replenish food or water");
+    println!("craft:\t\t COMING SOON");
+    println!("inventory:\t List items on inventory");
+    println!("stats:\t\t List your current stats");
+    println!("days:\t\t List the days survived so far");
+    println!("help:\t\t Print this instructions again");
+    println!("\n");
 }
 
 // This is a really cool function but I prefer not to use it until I have a proper understanding of lifetimes
