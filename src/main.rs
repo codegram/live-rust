@@ -174,6 +174,7 @@ fn request_input(prompt: &str) -> String {
     input
 }
 
+// This is a really cool function but I prefer not to use it until I have a proper understanding of lifetimes
 // fn get_inventory_item<'a, 'b>(
 //     inv: &'a mut std::vec::Vec<Item<'a>>,
 //     item_id: &'b str,
