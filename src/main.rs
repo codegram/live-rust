@@ -70,7 +70,7 @@ fn main() {
             "help" => print_help(),
             "sleep" => rest(&mut stats),
             "scavenge" => scavenge(&mut inventory, &mut stats),
-            "inventory" => println!("Items in your backpack: {:?}", inventory),
+            "inventory" => print_inventory(&inventory),
             "stats" => println!("Current stats: {:?}", stats),
             "days" => println!("Days survived so far: {}", days),
             "consume" => {
@@ -195,6 +195,13 @@ fn print_help() {
     println!("days:\t\t List the days survived so far");
     println!("help:\t\t Print this instructions again");
     println!("\n");
+}
+
+fn print_inventory(inventory: &std::vec::Vec<Item>) {
+    println!("Items in your backpack:");
+    for item in inventory {
+        println!("{:?}", item);
+    }
 }
 
 // This is a really cool function but I prefer not to use it until I have a proper understanding of lifetimes
