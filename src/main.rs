@@ -93,9 +93,7 @@ fn main() {
             _ => println!("Invalid input. Type 'help' for instructions."),
         }
 
-        let game_over = is_game_over(&stats, days);
-
-        if game_over {
+        if is_game_over(&stats, days) {
             break;
         }
     }
