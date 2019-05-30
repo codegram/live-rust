@@ -1,3 +1,6 @@
+use colored::*;
+use std::fmt;
+
 #[derive(Debug, Clone)]
 pub struct Stats {
     pub health: f64,
@@ -6,7 +9,7 @@ pub struct Stats {
     pub energy: f64,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Item<'a> {
     pub id: &'a str,
     pub name: &'a str,
@@ -16,6 +19,23 @@ pub struct Item<'a> {
     pub consumable: bool,
     days_to_perish: i32, // 0 for non perishable items
     uses_until_breakdown: i32,
+}
+
+impl<'a> fmt::Display for Item<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if self.consumable {
+            write!(
+                f,
+                "{}: {} (+{} water, +{} food)",
+                self.id.bold(),
+                self.description.dimmed(),
+                self.value.water,
+                self.value.food
+            )
+        } else {
+            write!(f, "{}: {}", self.id.bold(), self.description.dimmed())
+        }
+    }
 }
 
 pub const SCAVENGEABLE_ITEMS: [Item; 9] = [
