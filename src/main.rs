@@ -2,6 +2,7 @@ extern crate rand;
 
 use rand::seq::SliceRandom;
 use rand::Rng;
+use std::fmt;
 use std::io;
 use std::thread::sleep;
 use std::time::{Duration, Instant};
@@ -19,9 +20,14 @@ struct Stats {
     energy: Stat,
 }
 
-#[derive(Debug)]
 struct Stat {
     value: f64,
+}
+
+impl fmt::Debug for Stat {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:.*}", 2, self.value)
+    }
 }
 
 impl Stat {
@@ -71,7 +77,7 @@ fn main() {
             "sleep" => rest(&mut stats),
             "scavenge" => scavenge(&mut inventory, &mut stats),
             "inventory" => print_inventory(&inventory),
-            "stats" => println!("Current stats: {:?}", stats),
+            "stats" => println!("Current {:#?}", stats),
             "days" => println!("Days survived so far: {}", days),
             "consume" => {
                 let input = request_input("What do you want to eat/drink?");
