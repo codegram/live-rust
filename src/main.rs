@@ -106,26 +106,30 @@ fn is_game_over(stats: &Stats, days: i32) -> bool {
     let food_death = stats.food.value <= 0.0;
     let energy_death = stats.energy.value <= 0.0;
 
-    let game_over = water_death || food_death || energy_death;
-
-    if game_over {
-        println!("*** G A M E  O V E R ***");
-        println!("You survived {} days", days);
-
-        if energy_death {
-            println!(
-                "You died from exhaustion. Remember, sleeping is important, even in the wild."
-            );
-        } else if food_death {
-            println!("You died of hunger. A sturdy weapon would have provided you with a steady food supply, if only someone programmed the crafting feature");
-        } else if water_death {
-            println!("You died of thirst. A water collector could have saved your life, if only someone programmed the crafting feature");
+    match (water_death, food_death, energy_death) {
+        (true, _, _) => {
+            print_death("You died of thirst. A water collector could have saved your life, if only someone programmed the crafting feature", days);
+            true
         }
-
-        true
-    } else {
-        false
+        (_, true, _) => {
+            print_death("You died of hunger. A sturdy weapon would have provided you with a steady food supply, if only someone programmed the crafting feature", days);
+            true
+        }
+        (_, _, true) => {
+            print_death(
+                "You died from exhaustion. Remember, sleeping is important, even in the wild.",
+                days,
+            );
+            true
+        }
+        (false, false, false) => false,
     }
+}
+
+fn print_death(cause_of_death: &str, days: i32) {
+    println!("*** {} ***", "G A M E  O V E R".red().bold());
+    println!("You survived {} days", days.to_string().bold());
+    println!("{}", cause_of_death)
 }
 
 fn scavenge(inv: &mut std::vec::Vec<Item>, stats: &mut Stats) {
