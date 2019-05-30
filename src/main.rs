@@ -106,7 +106,9 @@ fn scavenge(inv: &mut std::vec::Vec<Item>, stats: &mut Stats) {
     } else {
         let mut rng = rand::thread_rng();
         sleep(Duration::new(2, 0));
-        stats.energy.increase(30.0);
+        stats.energy.decrease(5.0);
+        stats.water.decrease(5.0);
+        stats.food.decrease(3.0);
         for _number in 0..number_of_items {
             let item = SCAVENGEABLE_ITEMS.choose(&mut rng).unwrap().clone();
             println!("You found {:?}", item.name);
