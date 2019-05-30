@@ -56,14 +56,7 @@ fn main() {
     };
 
     loop {
-        println!("What to do?");
-
-        let mut action = String::new();
-
-        io::stdin()
-            .read_line(&mut action)
-            .ok()
-            .expect("Failed to read line");
+        let action = request_input("What to do?");
 
         let current_elapsed_time = now.elapsed().as_secs();
         let seconds = current_elapsed_time - elapsed_time;
@@ -84,16 +77,12 @@ fn main() {
                 println!("You died after {} days", days);
                 break;
             }
+            "consume" => {
+                let input = request_input("What do you want to eat/drink?");
+                consume(&mut inventory, input.trim(), &mut stats);
+            }
             "remove" => {
-                println!("What do you want to remove?");
-
-                let mut input = String::new();
-
-                io::stdin()
-                    .read_line(&mut input)
-                    .ok()
-                    .expect("Failed to read line");
-
+                let input = request_input("What do you want to remove?");
                 remove_inventory(&mut inventory, input.trim());
             }
             _ => println!("Invalid input"),
@@ -118,6 +107,8 @@ fn scavenge(inv: &mut std::vec::Vec<Item>, stats: &mut Stats) {
         let mut rng = rand::thread_rng();
         sleep(Duration::new(2, 0));
         stats.energy.decrease(5.0);
+        stats.water.decrease(5.0);
+        stats.food.decrease(3.0);
         for _number in 0..number_of_items {
             let item = SCAVENGEABLE_ITEMS.choose(&mut rng).unwrap().clone();
             println!("You found {:?}", item.name);
@@ -132,24 +123,22 @@ fn rest(stats: &mut Stats) {
     stats.energy.increase(10.0)
 }
 
-fn eat(stats: &mut Stats) {
-    println!("Eating…");
-    stats.food.increase(10.0)
-}
+fn consume(inv: &mut std::vec::Vec<Item>, item_id: &str, stats: &mut Stats) {
+    let item_idx = inv.iter().position(|item| item.id == item_id);
 
-fn drink(stats: &mut Stats) {
-    println!("Drinking…");
-    stats.water.increase(10.0)
-}
-
-fn decrease_stats(stats: &mut Stats, seconds: f64) {
-    let ratio_energy = 25 as f64 / 60 as f64;
-    let ratio_water = 25 as f64 / 60 as f64;
-    let ratio_food = 15 as f64 / 60 as f64;
-
-    stats.water.decrease(ratio_water * seconds);
-    stats.food.decrease(ratio_food * seconds);
-    stats.energy.decrease(ratio_energy * seconds);
+    match item_idx {
+        Some(idx) => {
+            let item = &inv[idx];
+            if item.consumable {
+                stats.water.increase(item.value.water);
+                stats.food.increase(item.value.food);
+                inv.remove(idx);
+            } else {
+                println!("Item is not consumable");
+            }
+        }
+        None => println!("Item not in inventory"),
+    }
 }
 
 fn remove_inventory(inv: &mut std::vec::Vec<Item>, item_id: &str) {
@@ -163,3 +152,42 @@ fn remove_inventory(inv: &mut std::vec::Vec<Item>, item_id: &str) {
         None => println!("Item not in inventory"),
     }
 }
+
+fn decrease_stats(stats: &mut Stats, seconds: f64) {
+    let ratio_energy = 25 as f64 / 60 as f64;
+    let ratio_water = 25 as f64 / 60 as f64;
+    let ratio_food = 15 as f64 / 60 as f64;
+
+    stats.water.decrease(ratio_water * seconds);
+    stats.food.decrease(ratio_food * seconds);
+    stats.energy.decrease(ratio_energy * seconds);
+}
+
+fn request_input(prompt: &str) -> String {
+    println!("{}", prompt);
+
+    let mut input = String::new();
+
+    io::stdin()
+        .read_line(&mut input)
+        .ok()
+        .expect("Failed to read line");
+
+    input
+}
+
+// This is a really cool function but I prefer not to use it until I have a proper understanding of lifetimes
+// fn get_inventory_item<'a, 'b>(
+//     inv: &'a mut std::vec::Vec<Item<'a>>,
+//     item_id: &'b str,
+// ) -> Option<(&'a mut Item<'a>, usize)> {
+//     let item_idx = inv.iter().position(|item| item.id == item_id);
+
+//     match item_idx {
+//         Some(idx) => Some((&mut inv[idx], idx)),
+//         None => {
+//             println!("Item not in inventory");
+//             None
+//         }
+//     }
+// }
