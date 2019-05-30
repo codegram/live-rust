@@ -1,3 +1,4 @@
+use colored::*;
 use std::fmt;
 
 #[derive(Debug, Clone)]
@@ -26,10 +27,13 @@ impl<'a> fmt::Debug for Item<'a> {
             write!(
                 f,
                 "{}: {} (+{} water, +{} food)",
-                self.id, self.description, self.value.water, self.value.food
+                self.id.bold(),
+                self.description.dimmed(),
+                self.value.water,
+                self.value.food
             )
         } else {
-            write!(f, "{}: {}", self.id, self.description)
+            write!(f, "{}: {}", self.id.bold(), self.description.dimmed())
         }
     }
 }
