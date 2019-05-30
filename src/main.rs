@@ -1,7 +1,6 @@
 extern crate rand;
 
 use rand::seq::SliceRandom;
-use rand::Rng;
 use std::fmt;
 use std::io;
 use std::thread::sleep;
@@ -94,10 +93,38 @@ fn main() {
             _ => println!("Invalid input. Type 'help' for instructions."),
         }
 
-        if stats.energy.value <= 0.0 || stats.food.value <= 0.0 || stats.water.value <= 0.0 {
-            println!("You died after {} days", days);
+        let game_over = is_game_over(&stats, days);
+
+        if game_over {
             break;
         }
+    }
+}
+
+fn is_game_over(stats: &Stats, days: i32) -> bool {
+    let water_death = stats.water.value <= 0.0;
+    let food_death = stats.food.value <= 0.0;
+    let energy_death = stats.energy.value <= 0.0;
+
+    let game_over = water_death || food_death || energy_death;
+
+    if game_over {
+        println!("*** G A M E  O V E R ***");
+        println!("You survived {} days", days);
+
+        if energy_death {
+            println!(
+                "You died from exhaustion. Remember, sleeping is important, even in the wild."
+            );
+        } else if food_death {
+            println!("You died of hunger. A sturdy weapon would have provided you with a steady food supply, if only someone programmed the crafting feature");
+        } else if water_death {
+            println!("You died of thirst. A water collector could have saved your life, if only someone programmed the crafting feature");
+        }
+
+        true
+    } else {
+        false
     }
 }
 
