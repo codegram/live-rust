@@ -21,7 +21,7 @@ pub struct Item<'a> {
     uses_until_breakdown: i32,
 }
 
-impl<'a> fmt::Debug for Item<'a> {
+impl<'a> fmt::Display for Item<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if self.consumable {
             write!(

@@ -252,7 +252,7 @@ fn print_help() {
 fn print_inventory(inventory: &std::vec::Vec<Item>) {
     println!("Items in your backpack:");
     for item in inventory {
-        println!("{:?}", item);
+        println!("{}", item);
     }
 }
 
