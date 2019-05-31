@@ -59,9 +59,9 @@ fn main() {
     let mut inventory: Inventory = Vec::new();
 
     let mut stats = Stats {
-        water: Stat::new(50.0),
-        food: Stat::new(50.0),
-        energy: Stat::new(50.0),
+        water: Stat::new(100.0),
+        food: Stat::new(100.0),
+        energy: Stat::new(100.0),
     };
 
     loop {
