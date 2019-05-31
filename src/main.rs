@@ -10,9 +10,11 @@ use std::time::{Duration, Instant};
 
 mod items;
 
-use crate::items::{Item, SCAVENGEABLE_ITEMS};
+use crate::items::{Item, ItemProperties, SCAVENGEABLE_ITEMS};
 
 const MAX: f64 = 100.0;
+
+type Inventory = Vec<Item>;
 
 #[derive(Debug)]
 struct Stats {
@@ -54,7 +56,7 @@ fn main() {
     let mut days: i32;
     let mut elapsed_time = now.elapsed().as_secs();
 
-    let mut inventory = Vec::new();
+    let mut inventory: Inventory = Vec::new();
 
     let mut stats = Stats {
         water: Stat::new(50.0),
@@ -132,7 +134,7 @@ fn print_death(cause_of_death: &str, days: i32) {
     println!("{}", cause_of_death)
 }
 
-fn scavenge(inv: &mut std::vec::Vec<Item>, stats: &mut Stats) {
+fn scavenge(inv: &mut Inventory, stats: &mut Stats) {
     let inv_max = 10;
 
     let slots_left = inv_max - inv.len();
@@ -162,18 +164,20 @@ fn rest(stats: &mut Stats) {
     println!("You wake up refreshed");
 }
 
-fn consume(inv: &mut std::vec::Vec<Item>, item_id: &str, stats: &mut Stats) {
+fn consume(inv: &mut Inventory, item_id: &str, stats: &mut Stats) {
     let item_idx = inv.iter().position(|item| item.id == item_id);
 
     match item_idx {
         Some(idx) => {
             let item = &inv[idx];
-            if item.consumable {
-                stats.water.increase(item.value.water);
-                stats.food.increase(item.value.food);
-                inv.remove(idx);
-            } else {
-                println!("{}", "Item is not consumable".red());
+            match &item.properties {
+                ItemProperties::ConsumeableItem { value, .. } => {
+                    stats.water.increase(value.water);
+                    stats.food.increase(value.food);
+                    inv.remove(idx);
+                    println!("Yummy!");
+                }
+                _ => println!("{}", "Item is not consumable".red()),
             }
         }
         None => println!(
@@ -184,7 +188,7 @@ fn consume(inv: &mut std::vec::Vec<Item>, item_id: &str, stats: &mut Stats) {
     }
 }
 
-fn remove_inventory(inv: &mut std::vec::Vec<Item>, item_id: &str) {
+fn remove_inventory(inv: &mut Inventory, item_id: &str) {
     let item_idx = inv.iter().position(|item| item.id == item_id);
 
     match item_idx {
@@ -249,7 +253,7 @@ fn print_help() {
     println!("\n");
 }
 
-fn print_inventory(inventory: &std::vec::Vec<Item>) {
+fn print_inventory(inventory: &Inventory) {
     println!("Items in your backpack:");
     for item in inventory {
         println!("{}", item);
