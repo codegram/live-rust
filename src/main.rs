@@ -1,8 +1,10 @@
 extern crate colored;
 extern crate rand;
+extern crate regex;
 
 use colored::*;
 use rand::seq::SliceRandom;
+use regex::Regex;
 use std::fmt;
 use std::io;
 use std::thread::sleep;
@@ -94,7 +96,33 @@ fn main() {
                 println!("You died after {} days", days);
                 break;
             }
-            _ => println!("Invalid input. Type 'help' for instructions."),
+            _ => {
+                let re = Regex::new(r"(consume|remove)(.+)").unwrap();
+
+                let capture_groups = re.captures_iter(action.trim());
+
+                let mut matched = false;
+
+                for cap in capture_groups {
+                    let action = &cap[1];
+                    let target = &cap[2].trim();
+
+                    matched = match action {
+                        "remove" => {
+                            remove_inventory(&mut inventory, target);
+                            true
+                        }
+                        "consume" => {
+                            consume(&mut inventory, target, &mut stats);
+                            true
+                        }
+                        _ => false,
+                    };
+                }
+                if matched == false {
+                    println!("Invalid input. Type 'help' for instructions.")
+                }
+            }
         }
 
         if is_game_over(&stats, days) {
