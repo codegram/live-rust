@@ -88,7 +88,7 @@ fn main() {
             "inventory" => print_inventory(&inventory),
             "stats" => println!("Current {:#?}", stats),
             "days" => println!("Days survived so far: {}", days),
-            "crafting" => print_recipes(),
+            "recipes" => print_recipes(),
             "consume" => {
                 let input = request_input("What do you want to eat/drink?");
                 consume(&mut inventory, input.trim(), &mut stats);
@@ -326,7 +326,14 @@ fn print_help() {
         "{}:\t Consume an item to replenish food or water",
         "consume".bold()
     );
-    println!("{}:\t\t COMING SOON", "craft".bold());
+    println!(
+        "{}:\t List all the available recipes to craft items",
+        "recipes".bold()
+    );
+    println!(
+        "{} <item>:\t Combine items to create other items",
+        "craft".bold()
+    );
     println!("{}:\t List items on inventory", "inventory".bold());
     println!("{}:\t\t List your current stats", "stats".bold());
     println!("{}:\t\t List the days survived so far", "days".bold());
