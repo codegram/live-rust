@@ -10,11 +10,15 @@ use std::io;
 use std::thread::sleep;
 use std::time::{Duration, Instant};
 
+mod crafting;
 mod items;
 
-use crate::items::{Item, ItemProperties, SCAVENGEABLE_ITEMS};
+use crate::items::{Item, ItemProperties, CRAFTABLE_ITEMS, SCAVENGEABLE_ITEMS};
+
+use crate::crafting::{print_recipes, recipes};
 
 const MAX: f64 = 100.0;
+const INV_MAX: usize = 10;
 
 type Inventory = Vec<Item>;
 
@@ -84,6 +88,7 @@ fn main() {
             "inventory" => print_inventory(&inventory),
             "stats" => println!("Current {:#?}", stats),
             "days" => println!("Days survived so far: {}", days),
+            "crafting" => print_recipes(),
             "consume" => {
                 let input = request_input("What do you want to eat/drink?");
                 consume(&mut inventory, input.trim(), &mut stats);
@@ -97,7 +102,7 @@ fn main() {
                 break;
             }
             _ => {
-                let re = Regex::new(r"(consume|remove)(.+)").unwrap();
+                let re = Regex::new(r"(consume|remove|craft)(.+)").unwrap();
 
                 let capture_groups = re.captures_iter(action.trim());
 
@@ -114,6 +119,10 @@ fn main() {
                         }
                         "consume" => {
                             consume(&mut inventory, target, &mut stats);
+                            true
+                        }
+                        "craft" => {
+                            craft_item(&mut inventory, target);
                             true
                         }
                         _ => false,
@@ -163,9 +172,7 @@ fn print_death(cause_of_death: &str, days: i32) {
 }
 
 fn scavenge(inv: &mut Inventory, stats: &mut Stats) {
-    let inv_max = 10;
-
-    let slots_left = inv_max - inv.len();
+    let slots_left = INV_MAX - inv.len();
     let number_of_items = if slots_left < 3 { slots_left } else { 3 };
 
     if number_of_items == 0 {
@@ -212,6 +219,52 @@ fn consume(inv: &mut Inventory, item_id: &str, stats: &mut Stats) {
             "{} Type '{}' to list available items.",
             "Item not in inventory.".red(),
             "inventory".bold()
+        ),
+    }
+}
+
+fn craft_item(inv: &mut Inventory, recipe_id: &str) {
+    let recipes = recipes();
+    let recipe = recipes.iter().find(|&recipe| recipe.id == recipe_id);
+
+    match recipe {
+        Some(recipe) => {
+            let items_needed = &recipe.items_needed;
+            let items_supplied = &recipe.result;
+            let mut can_be_crafted = true;
+
+            for item in items_needed {
+                let amount_in_inventory = inv.iter().filter(|i| i.id == item.0).count();
+                can_be_crafted = can_be_crafted && amount_in_inventory >= item.1;
+            }
+
+            if can_be_crafted {
+                for item in items_needed {
+                    for _ in 0..item.1 {
+                        remove_inventory(inv, item.0)
+                    }
+                }
+
+                for item in items_supplied {
+                    let result = CRAFTABLE_ITEMS
+                        .iter()
+                        .find(|craftable| craftable.id == *item)
+                        .unwrap()
+                        .clone();
+                    println!("You got {}", result.name.bold());
+                    inv.push(result);
+                }
+            } else {
+                println!(
+                    "{} You don't have enough items",
+                    "Failed to craft.".red().bold()
+                );
+            }
+        }
+        None => println!(
+            "{} Type '{}' to list existing recipies.",
+            "Invalid recipe.".red(),
+            "crafting".bold()
         ),
     }
 }
