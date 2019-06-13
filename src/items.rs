@@ -20,6 +20,9 @@ pub enum ItemProperties {
     ToolItem {
         uses_until_breakdown: i32,
     },
+    WeaponItem {
+        uses_until_breakdown: i32,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -63,7 +66,7 @@ pub const SCAVENGEABLE_ITEMS: [Item; 9] = [
         },
     },
     Item {
-        id: "water-dirty",
+        id: "dirty water",
         name: "Dirty Water",
         description: "It will calm your thirst, but might make you sick",
         properties: ItemProperties::ConsumeableItem {
@@ -114,7 +117,7 @@ pub const SCAVENGEABLE_ITEMS: [Item; 9] = [
         properties: ItemProperties::StandardItem,
     },
     Item {
-        id: "medicinal-herbs",
+        id: "medicinal herbs",
         name: "Medicinal herbs",
         description: "Healing properties when brewed",
         properties: ItemProperties::StandardItem,
@@ -123,7 +126,7 @@ pub const SCAVENGEABLE_ITEMS: [Item; 9] = [
 
 pub const CRAFTABLE_ITEMS: [Item; 9] = [
     Item {
-        id: "meat",
+        id: "raw meat",
         name: "Raw meat",
         description: "Careful, might have parasites!",
         properties: ItemProperties::ConsumeableItem {
@@ -153,7 +156,7 @@ pub const CRAFTABLE_ITEMS: [Item; 9] = [
         },
     },
     Item {
-        id: "medicinal-tea",
+        id: "medicinal tea",
         name: "Medicinal tea",
         description: "Cures you from sickness and restores health",
         properties: ItemProperties::ConsumeableItem {
@@ -168,7 +171,7 @@ pub const CRAFTABLE_ITEMS: [Item; 9] = [
         },
     },
     Item {
-        id: "meat-cooked",
+        id: "cooked meat",
         name: "Cooked meat",
         description: "Tasty nourishment",
         properties: ItemProperties::ConsumeableItem {
@@ -183,7 +186,7 @@ pub const CRAFTABLE_ITEMS: [Item; 9] = [
         },
     },
     Item {
-        id: "water-clean",
+        id: "clean water",
         name: "Clean water",
         description: "Safe for drink",
         properties: ItemProperties::ConsumeableItem {
@@ -204,10 +207,10 @@ pub const CRAFTABLE_ITEMS: [Item; 9] = [
         properties: ItemProperties::StandardItem,
     },
     Item {
-        id: "bow:",
-        name: "Bow:",
+        id: "bow",
+        name: "Bow",
         description: "Lets you hunt and defend yourself:",
-        properties: ItemProperties::ToolItem {
+        properties: ItemProperties::WeaponItem {
             uses_until_breakdown: 5,
         },
     },
@@ -220,7 +223,7 @@ pub const CRAFTABLE_ITEMS: [Item; 9] = [
         },
     },
     Item {
-        id: "rabbit-pelt:",
+        id: "rabbit pelt:",
         name: "Rabbit pelt:",
         description: "It's not gonna be of much use until you can craft more stuff…:",
         properties: ItemProperties::StandardItem,
