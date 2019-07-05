@@ -10,12 +10,15 @@ use std::io;
 use std::thread::sleep;
 use std::time::{Duration, Instant};
 
+mod camp;
 mod crafting;
 mod items;
 
 use crate::items::{Item, ItemProperties, CRAFTABLE_ITEMS, SCAVENGEABLE_ITEMS};
 
-use crate::crafting::{print_recipes, recipes};
+use crate::crafting::{print_recipes, recipes, RecipeCategory};
+
+use crate::camp::{Fire, FireStatus, WaterCollector};
 
 const MAX: f64 = 100.0;
 const INV_MAX: usize = 10;
@@ -63,6 +66,8 @@ fn main() {
     let mut elapsed_time = now.elapsed().as_secs();
 
     let mut inventory: Inventory = Vec::new();
+
+    let mut fire = Fire::new();
 
     let mut stats = Stats {
         water: Stat::new(100.0),
@@ -122,7 +127,7 @@ fn main() {
                             true
                         }
                         "craft" => {
-                            craft_item(&mut inventory, target);
+                            craft_item(&mut inventory, target, &mut fire);
                             true
                         }
                         _ => false,
@@ -223,7 +228,7 @@ fn consume(inv: &mut Inventory, item_id: &str, stats: &mut Stats) {
     }
 }
 
-fn craft_item(inv: &mut Inventory, recipe_id: &str) {
+fn craft_item(inv: &mut Inventory, recipe_id: &str, fire: &mut Fire) {
     let recipes = recipes();
     let recipe = recipes.iter().find(|&recipe| recipe.id == recipe_id);
 
@@ -238,6 +243,13 @@ fn craft_item(inv: &mut Inventory, recipe_id: &str) {
                 can_be_crafted = can_be_crafted && amount_in_inventory >= item.1;
             }
 
+            for upgrade in &recipe.upgrades_needed {
+                match upgrade as &str {
+                    "fire" => can_be_crafted = can_be_crafted && fire.status != FireStatus::Out,
+                    _ => println!("Unable to craft"),
+                }
+            }
+
             if can_be_crafted {
                 for item in items_needed {
                     for _ in 0..item.1 {
@@ -246,17 +258,32 @@ fn craft_item(inv: &mut Inventory, recipe_id: &str) {
                 }
 
                 for item in items_supplied {
-                    let result = CRAFTABLE_ITEMS
-                        .iter()
-                        .find(|craftable| craftable.id == *item)
-                        .unwrap()
-                        .clone();
-                    println!("You got {}", result.name.bold());
-                    inv.push(result);
+                    match recipe.category {
+                        RecipeCategory::CampUpgrade => {
+                            println!("craft upgrade {}", item);
+
+                            match item as &str {
+                                "fire" => {
+                                    fire.craft();
+                                    println!("Fire is burning {:?}", fire.status)
+                                }
+                                _ => println!("Unable to craft {}", item),
+                            }
+                        }
+                        _ => {
+                            let result = CRAFTABLE_ITEMS
+                                .iter()
+                                .find(|craftable| craftable.id == *item)
+                                .unwrap()
+                                .clone();
+                            println!("You got {}", result.name.bold());
+                            inv.push(result);
+                        }
+                    }
                 }
             } else {
                 println!(
-                    "{} You don't have enough items",
+                    "{} You don't have enough items or upgrades",
                     "Failed to craft.".red().bold()
                 );
             }
