@@ -18,7 +18,7 @@ use crate::items::{Item, ItemProperties, CRAFTABLE_ITEMS, SCAVENGEABLE_ITEMS};
 
 use crate::crafting::{print_recipes, recipes, RecipeCategory};
 
-use crate::camp::{Fire, FireStatus, WaterCollector};
+use crate::camp::{Fire, FireStatus};
 
 const MAX: f64 = 100.0;
 const INV_MAX: usize = 10;

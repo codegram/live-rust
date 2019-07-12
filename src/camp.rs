@@ -1,9 +1,3 @@
-// trait CampUpgrade {
-//   fn craft() -> Self;
-
-//   fn destroy(&mut self);
-// }
-
 #[derive(Debug)]
 pub struct Fire {
   pub status: FireStatus,

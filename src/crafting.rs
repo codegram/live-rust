@@ -28,7 +28,7 @@ pub enum RecipeCategory {
   Other,
 }
 
-pub fn recipes() -> [Recipe; 10] {
+pub fn recipes() -> [Recipe; 9] {
   return [
     Recipe {
       id: "fire",
@@ -40,16 +40,16 @@ pub fn recipes() -> [Recipe; 10] {
       result: vec!["fire"],
       category: RecipeCategory::CampUpgrade,
     },
-    Recipe {
-      id: "water collector",
-      name: "Water collector",
-      description: "Collects rain water",
-      items_needed: vec![("plastic", 1), ("rope", 1), ("bottle", 1)],
-      tools_needed: vec![],
-      upgrades_needed: vec![],
-      result: vec!["water collector"],
-      category: RecipeCategory::CampUpgrade,
-    },
+    // Recipe {
+    //   id: "water collector",
+    //   name: "Water collector",
+    //   description: "Collects rain water",
+    //   items_needed: vec![("plastic", 1), ("rope", 1), ("bottle", 1)],
+    //   tools_needed: vec![],
+    //   upgrades_needed: vec![],
+    //   result: vec!["water collector"],
+    //   category: RecipeCategory::CampUpgrade,
+    // },
     Recipe {
       id: "rope",
       name: "Rope",
