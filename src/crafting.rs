@@ -24,18 +24,39 @@ pub enum RecipeCategory {
   Consumable,
   Tool,
   Weapon,
+  CampUpgrade,
   Other,
 }
 
-pub fn recipes() -> [Recipe; 8] {
+pub fn recipes() -> [Recipe; 9] {
   return [
+    Recipe {
+      id: "fire",
+      name: "Fire",
+      description: "Will allow you to cook items",
+      items_needed: vec![("wood", 1), ("flint", 1)],
+      tools_needed: vec![],
+      upgrades_needed: vec![],
+      result: vec!["fire"],
+      category: RecipeCategory::CampUpgrade,
+    },
+    // Recipe {
+    //   id: "water collector",
+    //   name: "Water collector",
+    //   description: "Collects rain water",
+    //   items_needed: vec![("plastic", 1), ("rope", 1), ("bottle", 1)],
+    //   tools_needed: vec![],
+    //   upgrades_needed: vec![],
+    //   result: vec!["water collector"],
+    //   category: RecipeCategory::CampUpgrade,
+    // },
     Recipe {
       id: "rope",
       name: "Rope",
       description: "",
       items_needed: vec![("string", 2)],
-      tools_needed: Vec::new(),
-      upgrades_needed: Vec::new(),
+      tools_needed: vec![],
+      upgrades_needed: vec![],
       result: vec!["rope"],
       category: RecipeCategory::Tool,
     },
@@ -123,6 +144,11 @@ pub fn print_recipes() {
         item.1.to_string().dimmed(),
         item.0.bold().dimmed(),
       )
+    }
+    for upgrade in &recipe.upgrades_needed {
+      if upgrade as &str == "fire" {
+        println!("\tNeeds fire");
+      }
     }
   }
 }
