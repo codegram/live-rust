@@ -7,6 +7,8 @@ use rand::seq::SliceRandom;
 use regex::Regex;
 use std::fmt;
 use std::io;
+use std::sync::{Arc, Mutex};
+use std::thread;
 use std::thread::sleep;
 use std::time::{Duration, Instant};
 
@@ -62,8 +64,8 @@ fn main() {
 
     let now = Instant::now();
 
-    let mut days: i32;
     let mut elapsed_time = now.elapsed().as_secs();
+    // let mut last_elapsed_time = 0;
 
     let mut inventory: Inventory = Vec::new();
 
@@ -75,6 +77,36 @@ fn main() {
         energy: Stat::new(100.0),
     };
 
+    // let stats = Arc::new(Mutex::new(Stats {
+    //     water: Stat::new(100.0),
+    //     food: Stat::new(100.0),
+    //     energy: Stat::new(100.0),
+    // }));
+    let days = Arc::new(Mutex::new(0));
+
+    // let thread_stats = Arc::clone(&stats);
+
+    {
+        let days = Arc::clone(&days);
+        thread::spawn(move || {
+            loop {
+                let elapsed_time = now.elapsed().as_secs();
+                // let seconds = elapsed_time - last_elapsed_time;
+                // last_elapsed_time = elapsed_time;
+
+                let mut elapsed_days = days.lock().unwrap();
+
+                *elapsed_days = elapsed_time as i32 / 60;
+                println!("hello {:?}", elapsed_days);
+                std::mem::drop(elapsed_days);
+
+                // decrease_stats(&mut stats.lock().unwrap(), seconds as f64);
+
+                thread::sleep(Duration::from_secs(10));
+            }
+        });
+    }
+
     loop {
         let action = request_input("\nWhat to do?");
 
@@ -82,7 +114,6 @@ fn main() {
         let seconds = current_elapsed_time - elapsed_time;
 
         elapsed_time = current_elapsed_time;
-        days = elapsed_time as i32 / 60;
 
         decrease_stats(&mut stats, seconds as f64);
 
@@ -92,7 +123,11 @@ fn main() {
             "scavenge" => scavenge(&mut inventory, &mut stats),
             "inventory" => print_inventory(&inventory),
             "stats" => println!("Current {:#?}", stats),
-            "days" => println!("Days survived so far: {}", days),
+            "days" => {
+                let print_days = days.lock().unwrap();
+
+                println!("Days survived so far: {:?}", *print_days)
+            }
             "recipes" => print_recipes(),
             "consume" => {
                 let input = request_input("What do you want to eat/drink?");
@@ -103,7 +138,7 @@ fn main() {
                 remove_inventory(&mut inventory, input.trim());
             }
             "die" => {
-                println!("You died after {} days", days);
+                println!("You died after {} days", days.lock().unwrap());
                 break;
             }
             _ => {
@@ -139,7 +174,9 @@ fn main() {
             }
         }
 
-        if is_game_over(&stats, days) {
+        let days_game_over = days.lock().unwrap();
+
+        if is_game_over(&stats, *days_game_over) {
             break;
         }
     }
