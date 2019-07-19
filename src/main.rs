@@ -7,6 +7,8 @@ use rand::seq::SliceRandom;
 use regex::Regex;
 use std::fmt;
 use std::io;
+use std::sync::{mpsc, Arc, Mutex};
+use std::thread;
 use std::thread::sleep;
 use std::time::{Duration, Instant};
 
@@ -60,89 +62,125 @@ impl Stat {
 fn main() {
     print_help();
 
-    let now = Instant::now();
-
-    let mut days: i32;
-    let mut elapsed_time = now.elapsed().as_secs();
-
     let mut inventory: Inventory = Vec::new();
 
     let mut fire = Fire::new();
 
-    let mut stats = Stats {
+    let stats = Arc::new(Mutex::new(Stats {
         water: Stat::new(100.0),
         food: Stat::new(100.0),
         energy: Stat::new(100.0),
-    };
+    }));
 
-    loop {
+    let days = Arc::new(Mutex::new(0));
+
+    control_time(&days, &stats);
+
+    let (tx, rx) = mpsc::channel();
+    let (tx2, rx2) = mpsc::channel();
+
+    thread::spawn(move || loop {
+        let _ = rx2.recv();
+
         let action = request_input("\nWhat to do?");
 
-        let current_elapsed_time = now.elapsed().as_secs();
-        let seconds = current_elapsed_time - elapsed_time;
+        let send = action.clone();
 
-        elapsed_time = current_elapsed_time;
-        days = elapsed_time as i32 / 60;
+        tx.send(send).ok();
+    });
 
-        decrease_stats(&mut stats, seconds as f64);
+    trigger_input(&tx2);
 
-        match action.trim() {
-            "help" => print_help(),
-            "sleep" => rest(&mut stats),
-            "scavenge" => scavenge(&mut inventory, &mut stats),
-            "inventory" => print_inventory(&inventory),
-            "stats" => println!("Current {:#?}", stats),
-            "days" => println!("Days survived so far: {}", days),
-            "recipes" => print_recipes(),
-            "consume" => {
-                let input = request_input("What do you want to eat/drink?");
-                consume(&mut inventory, input.trim(), &mut stats);
-            }
-            "remove" => {
-                let input = request_input("What do you want to remove?");
-                remove_inventory(&mut inventory, input.trim());
-            }
-            "die" => {
-                println!("You died after {} days", days);
-                break;
-            }
-            _ => {
-                let re = Regex::new(r"(consume|remove|craft)(.+)").unwrap();
-
-                let capture_groups = re.captures_iter(action.trim());
-
-                let mut matched = false;
-
-                for cap in capture_groups {
-                    let action = &cap[1];
-                    let target = &cap[2].trim();
-
-                    matched = match action {
-                        "remove" => {
-                            remove_inventory(&mut inventory, target);
-                            true
-                        }
-                        "consume" => {
-                            consume(&mut inventory, target, &mut stats);
-                            true
-                        }
-                        "craft" => {
-                            craft_item(&mut inventory, target, &mut fire);
-                            true
-                        }
-                        _ => false,
-                    };
+    loop {
+        if let Ok(action) = rx.try_recv() {
+            match action.trim() {
+                "help" => print_help(),
+                "sleep" => rest(&mut stats.lock().unwrap()),
+                "scavenge" => scavenge(&mut inventory, &mut stats.lock().unwrap()),
+                "inventory" => print_inventory(&inventory),
+                "stats" => {
+                    let print_stats = stats.lock().unwrap();
+                    println!("Current {:#?}", *print_stats);
                 }
-                if matched == false {
-                    println!("Invalid input. Type 'help' for instructions.")
+                "days" => {
+                    let print_days = days.lock().unwrap();
+
+                    println!("Days survived so far: {:?}", *print_days)
+                }
+                "recipes" => print_recipes(),
+                "consume" => {
+                    let input = request_input("What do you want to eat/drink?");
+                    consume(&mut inventory, input.trim(), &mut stats.lock().unwrap());
+                }
+                "remove" => {
+                    let input = request_input("What do you want to remove?");
+                    remove_inventory(&mut inventory, input.trim());
+                }
+                "die" => {
+                    println!("You died after {} days", days.lock().unwrap());
+                    break;
+                }
+                _ => {
+                    let re = Regex::new(r"(consume|remove|craft)(.+)").unwrap();
+
+                    let capture_groups = re.captures_iter(action.trim());
+
+                    let mut matched = false;
+
+                    for cap in capture_groups {
+                        let action = &cap[1];
+                        let target = &cap[2].trim();
+
+                        matched = match action {
+                            "remove" => {
+                                remove_inventory(&mut inventory, target);
+                                true
+                            }
+                            "consume" => {
+                                consume(&mut inventory, target, &mut stats.lock().unwrap());
+                                true
+                            }
+                            "craft" => {
+                                craft_item(&mut inventory, target, &mut fire);
+                                true
+                            }
+                            _ => false,
+                        };
+                    }
+                    if matched == false {
+                        println!("Invalid input. Type 'help' for instructions.")
+                    }
                 }
             }
+            trigger_input(&tx2);
         }
 
-        if is_game_over(&stats, days) {
+        let days_game_over = days.lock().unwrap();
+
+        if is_game_over(&stats.lock().unwrap(), *days_game_over) {
             break;
         }
     }
+}
+
+fn control_time(days: &Arc<Mutex<i32>>, stats: &Arc<Mutex<Stats>>) {
+    let now = Instant::now();
+    let days = Arc::clone(&days);
+    let stats = Arc::clone(&stats);
+    thread::spawn(move || loop {
+        thread::sleep(Duration::from_secs(10));
+        let elapsed_time = now.elapsed().as_secs();
+        let mut elapsed_days = days.lock().unwrap();
+
+        *elapsed_days = elapsed_time as i32 / 60;
+
+        let mut stats_lock = stats.lock().unwrap();
+        decrease_stats(&mut stats_lock, 10.0);
+    });
+}
+
+fn trigger_input(tx: &mpsc::Sender<String>) {
+    tx.send(String::from("do something")).ok();
 }
 
 fn is_game_over(stats: &Stats, days: i32) -> bool {
