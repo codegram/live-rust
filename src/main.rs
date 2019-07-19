@@ -168,18 +168,14 @@ fn control_time(days: &Arc<Mutex<i32>>, stats: &Arc<Mutex<Stats>>) {
     let days = Arc::clone(&days);
     let stats = Arc::clone(&stats);
     thread::spawn(move || loop {
+        thread::sleep(Duration::from_secs(10));
         let elapsed_time = now.elapsed().as_secs();
         let mut elapsed_days = days.lock().unwrap();
 
         *elapsed_days = elapsed_time as i32 / 60;
 
-        std::mem::drop(elapsed_days);
-
         let mut stats_lock = stats.lock().unwrap();
         decrease_stats(&mut stats_lock, 10.0);
-        std::mem::drop(stats_lock);
-
-        thread::sleep(Duration::from_secs(10));
     });
 }
 
