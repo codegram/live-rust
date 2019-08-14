@@ -1,3 +1,5 @@
+use crate::colored::Colorize;
+
 #[derive(Debug)]
 pub struct Fire {
   pub status: FireStatus,
@@ -70,5 +72,57 @@ impl Fire {
 }
 
 pub struct WaterCollector {
-  status: i32,
+  pub status: CollectorStatus,
+  pub time: i32,
+  pub uses: i32,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum CollectorStatus {
+  Collecting,
+  Waiting,
+  Out,
+}
+
+impl WaterCollector {
+  pub fn new() -> Self {
+    WaterCollector {
+      status: CollectorStatus::Out,
+      time: 0,
+      uses: 0,
+    }
+  }
+  pub fn craft(&mut self) {
+    self.status = CollectorStatus::Collecting;
+    self.time = 0;
+    self.uses = 0;
+    println!("{}", "Collecting…".italic().dimmed());
+  }
+  pub fn destroy(&mut self) {
+    self.status = CollectorStatus::Out;
+    self.time = 0;
+    self.uses = 0;
+    println!("{}", "The water collector broke down!".red());
+  }
+  pub fn pass_time(&mut self) {
+    if self.status == CollectorStatus::Collecting {
+      self.time += 10;
+
+      if self.time == 60 {
+        self.status = CollectorStatus::Waiting;
+        println!("{}", "The water collector is full!".green());
+      }
+    }
+  }
+  pub fn collect(&mut self) {
+    self.time = 0;
+    self.uses += 1;
+
+    if self.uses == 3 {
+      self.destroy();
+    } else {
+      self.status = CollectorStatus::Collecting;
+      println!("{}", "Collecting…".italic().dimmed());
+    }
+  }
 }
