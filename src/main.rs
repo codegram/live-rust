@@ -64,7 +64,7 @@ fn main() {
 
     let mut inventory: Inventory = Vec::new();
 
-    let mut fire = Fire::new();
+    let fire = Arc::new(Mutex::new(Fire::new()));
 
     let stats = Arc::new(Mutex::new(Stats {
         water: Stat::new(100.0),
@@ -74,7 +74,7 @@ fn main() {
 
     let days = Arc::new(Mutex::new(0));
 
-    control_time(&days, &stats);
+    control_time(&days, &stats, &fire);
 
     let (tx, rx) = mpsc::channel();
     let (tx2, rx2) = mpsc::channel();
@@ -112,6 +112,9 @@ fn main() {
                     let input = request_input("What do you want to eat/drink?");
                     consume(&mut inventory, input.trim(), &mut stats.lock().unwrap());
                 }
+                "stoke fire" => {
+                    stoke_fire(&mut inventory, &mut fire.lock().unwrap());
+                }
                 "remove" => {
                     let input = request_input("What do you want to remove?");
                     remove_inventory(&mut inventory, input.trim());
@@ -141,7 +144,7 @@ fn main() {
                                 true
                             }
                             "craft" => {
-                                craft_item(&mut inventory, target, &mut fire);
+                                craft_item(&mut inventory, target, &mut fire.lock().unwrap());
                                 true
                             }
                             _ => false,
@@ -163,12 +166,18 @@ fn main() {
     }
 }
 
-fn control_time(days: &Arc<Mutex<i32>>, stats: &Arc<Mutex<Stats>>) {
+fn control_time(days: &Arc<Mutex<i32>>, stats: &Arc<Mutex<Stats>>, fire: &Arc<Mutex<Fire>>) {
     let now = Instant::now();
     let days = Arc::clone(&days);
     let stats = Arc::clone(&stats);
+    let fire = Arc::clone(&fire);
+
     thread::spawn(move || loop {
         thread::sleep(Duration::from_secs(10));
+
+        let mut fire_lock = fire.lock().unwrap();
+        fire_lock.pass_time();
+
         let elapsed_time = now.elapsed().as_secs();
         let mut elapsed_days = days.lock().unwrap();
 
@@ -291,7 +300,7 @@ fn craft_item(inv: &mut Inventory, recipe_id: &str, fire: &mut Fire) {
             if can_be_crafted {
                 for item in items_needed {
                     for _ in 0..item.1 {
-                        remove_inventory(inv, item.0)
+                        remove_inventory(inv, item.0);
                     }
                 }
 
@@ -334,19 +343,35 @@ fn craft_item(inv: &mut Inventory, recipe_id: &str, fire: &mut Fire) {
     }
 }
 
-fn remove_inventory(inv: &mut Inventory, item_id: &str) {
+fn remove_inventory(inv: &mut Inventory, item_id: &str) -> bool {
     let item_idx = inv.iter().position(|item| item.id == item_id);
 
     match item_idx {
         Some(idx) => {
             inv.remove(idx);
             println!("{}", "Item removed".green());
+            true
         }
-        None => println!(
-            "{} Type '{}' to list available items.",
-            "Item not in inventory.".red(),
-            "inventory".bold()
-        ),
+        None => {
+            println!(
+                "{} Type '{}' to list available items.",
+                "Item not in inventory.".red(),
+                "inventory".bold()
+            );
+            false
+        }
+    }
+}
+
+fn stoke_fire(inv: &mut Inventory, fire: &mut Fire) {
+    if fire.status != FireStatus::Out {
+        if remove_inventory(inv, "wood") {
+            fire.increase_status();
+        } else {
+            println!("{}", "You don't have wood in your inventory".red());
+        }
+    } else {
+        println!("{}", "You don't have a fire in your camp".red());
     }
 }
 
@@ -399,6 +424,7 @@ fn print_help() {
         "{} <item>:\t Combine items to create other items",
         "craft".bold()
     );
+    println!("{}:\t Add wood to stoke the fire", "stoke fire".bold());
     println!("{}:\t List items on inventory", "inventory".bold());
     println!("{}:\t\t List your current stats", "stats".bold());
     println!("{}:\t\t List the days survived so far", "days".bold());
