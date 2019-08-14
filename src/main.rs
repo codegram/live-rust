@@ -20,7 +20,7 @@ use crate::items::{Item, ItemProperties, CRAFTABLE_ITEMS, SCAVENGEABLE_ITEMS};
 
 use crate::crafting::{print_recipes, recipes, RecipeCategory};
 
-use crate::camp::{Fire, FireStatus};
+use crate::camp::{CollectorStatus, Fire, FireStatus, WaterCollector};
 
 const MAX: f64 = 100.0;
 const INV_MAX: usize = 10;
@@ -65,6 +65,7 @@ fn main() {
     let mut inventory: Inventory = Vec::new();
 
     let fire = Arc::new(Mutex::new(Fire::new()));
+    let water_collector = Arc::new(Mutex::new(WaterCollector::new()));
 
     let stats = Arc::new(Mutex::new(Stats {
         water: Stat::new(100.0),
@@ -74,7 +75,7 @@ fn main() {
 
     let days = Arc::new(Mutex::new(0));
 
-    control_time(&days, &stats, &fire);
+    control_time(&days, &stats, &fire, &water_collector);
 
     let (tx, rx) = mpsc::channel();
     let (tx2, rx2) = mpsc::channel();
@@ -112,8 +113,11 @@ fn main() {
                     let input = request_input("What do you want to eat/drink?");
                     consume(&mut inventory, input.trim(), &mut stats.lock().unwrap());
                 }
-                "stoke fire" => {
+                "stoke" => {
                     stoke_fire(&mut inventory, &mut fire.lock().unwrap());
+                }
+                "collect" => {
+                    collect(&mut inventory, &mut water_collector.lock().unwrap());
                 }
                 "remove" => {
                     let input = request_input("What do you want to remove?");
@@ -144,7 +148,12 @@ fn main() {
                                 true
                             }
                             "craft" => {
-                                craft_item(&mut inventory, target, &mut fire.lock().unwrap());
+                                craft_item(
+                                    &mut inventory,
+                                    target,
+                                    &mut fire.lock().unwrap(),
+                                    &mut water_collector.lock().unwrap(),
+                                );
                                 true
                             }
                             _ => false,
@@ -166,17 +175,26 @@ fn main() {
     }
 }
 
-fn control_time(days: &Arc<Mutex<i32>>, stats: &Arc<Mutex<Stats>>, fire: &Arc<Mutex<Fire>>) {
+fn control_time(
+    days: &Arc<Mutex<i32>>,
+    stats: &Arc<Mutex<Stats>>,
+    fire: &Arc<Mutex<Fire>>,
+    water_collector: &Arc<Mutex<WaterCollector>>,
+) {
     let now = Instant::now();
     let days = Arc::clone(&days);
     let stats = Arc::clone(&stats);
     let fire = Arc::clone(&fire);
+    let water_collector = Arc::clone(&water_collector);
 
     thread::spawn(move || loop {
         thread::sleep(Duration::from_secs(10));
 
         let mut fire_lock = fire.lock().unwrap();
         fire_lock.pass_time();
+
+        let mut collector_lock = water_collector.lock().unwrap();
+        collector_lock.pass_time();
 
         let elapsed_time = now.elapsed().as_secs();
         let mut elapsed_days = days.lock().unwrap();
@@ -199,11 +217,14 @@ fn is_game_over(stats: &Stats, days: i32) -> bool {
 
     match (water_death, food_death, energy_death) {
         (true, _, _) => {
-            print_death("You died of thirst. A water collector could have saved your life, if only someone programmed the crafting feature", days);
+            print_death(
+                "You died of thirst. A water collector could have saved your life",
+                days,
+            );
             true
         }
         (_, true, _) => {
-            print_death("You died of hunger. A sturdy weapon would have provided you with a steady food supply, if only someone programmed the crafting feature", days);
+            print_death("You died of hunger. A sturdy weapon would have provided you with a steady food supply, if only someone programmed the hunting feature", days);
             true
         }
         (_, _, true) => {
@@ -275,7 +296,12 @@ fn consume(inv: &mut Inventory, item_id: &str, stats: &mut Stats) {
     }
 }
 
-fn craft_item(inv: &mut Inventory, recipe_id: &str, fire: &mut Fire) {
+fn craft_item(
+    inv: &mut Inventory,
+    recipe_id: &str,
+    fire: &mut Fire,
+    collector: &mut WaterCollector,
+) {
     let recipes = recipes();
     let recipe = recipes.iter().find(|&recipe| recipe.id == recipe_id);
 
@@ -313,6 +339,9 @@ fn craft_item(inv: &mut Inventory, recipe_id: &str, fire: &mut Fire) {
                                 "fire" => {
                                     fire.craft();
                                     println!("Fire is burning {:?}", fire.status)
+                                }
+                                "water collector" => {
+                                    collector.craft();
                                 }
                                 _ => println!("Unable to craft {}", item),
                             }
@@ -375,6 +404,26 @@ fn stoke_fire(inv: &mut Inventory, fire: &mut Fire) {
     }
 }
 
+fn collect(inv: &mut Inventory, collector: &mut WaterCollector) {
+    if inv.len() == INV_MAX {
+        println!("{}", "Your inventory is full".red());
+        return;
+    }
+
+    if collector.status == CollectorStatus::Waiting {
+        let result = CRAFTABLE_ITEMS
+            .iter()
+            .find(|craftable| craftable.id == "clean water")
+            .unwrap()
+            .clone();
+        println!("You got {}", result.name.bold());
+        inv.push(result);
+        collector.collect();
+    } else {
+        println!("{}", "There is nothing to collect".red());
+    }
+}
+
 fn decrease_stats(stats: &mut Stats, seconds: f64) {
     let ratio_energy = 25 as f64 / 60 as f64;
     let ratio_water = 25 as f64 / 60 as f64;
@@ -424,7 +473,8 @@ fn print_help() {
         "{} <item>:\t Combine items to create other items",
         "craft".bold()
     );
-    println!("{}:\t Add wood to stoke the fire", "stoke fire".bold());
+    println!("{}:\t\t Add wood to stoke the fire", "stoke".bold());
+    println!("{}:\t Add clean water to your inventory", "collect".bold());
     println!("{}:\t List items on inventory", "inventory".bold());
     println!("{}:\t\t List your current stats", "stats".bold());
     println!("{}:\t\t List the days survived so far", "days".bold());
