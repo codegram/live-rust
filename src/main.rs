@@ -16,7 +16,7 @@ mod camp;
 mod crafting;
 mod items;
 
-use crate::items::{Item, ItemProperties, CRAFTABLE_ITEMS, SCAVENGEABLE_ITEMS};
+use crate::items::{Item, ItemProperties, CRAFTABLE_ITEMS, SCAVENGEABLE_ITEMS, HUNTABLE_ITEMS};
 
 use crate::crafting::{print_recipes, recipes, RecipeCategory};
 
@@ -97,6 +97,7 @@ fn main() {
             match action.trim() {
                 "help" => print_help(),
                 "sleep" => rest(&mut stats.lock().unwrap()),
+                "hunt" => hunt(&mut inventory, &mut stats.lock().unwrap()),
                 "scavenge" => scavenge(&mut inventory, &mut stats.lock().unwrap()),
                 "inventory" => print_inventory(&inventory),
                 "stats" => {
@@ -242,6 +243,36 @@ fn print_death(cause_of_death: &str, days: i32) {
     println!("*** {} ***", "G A M E  O V E R".red().bold());
     println!("You survived {} days", days.to_string().bold());
     println!("{}", cause_of_death)
+}
+
+fn hunt(inv: &mut Inventory, stats: &mut Stats) {
+    let slots_left = INV_MAX - inv.len();
+    let number_of_items = if slots_left < 3 { slots_left } else { 3 };
+
+    let weapon = inv.iter().position(|item| item.id == "bow");
+
+    match weapon {
+        Some(_) => {
+            if number_of_items == 0 {
+                println!("Your inventory is full. Remove at least one item to proceed.");
+            } else{
+                println!("{}", "Hunting…".italic().dimmed());
+                sleep(Duration::new(4, 0));
+                stats.energy.decrease(5.0);
+                stats.water.decrease(5.0);
+                stats.food.decrease(3.0);
+
+                if rand::random() {
+                    let item = HUNTABLE_ITEMS.first().unwrap().clone();
+                    println!("You found {}", item.name.bold());
+                    inv.push(item);
+                } else {
+                    println!("You were unable to track down any animal. Better luck next time!");
+                }
+            }
+        },
+        None => println!("You need to craft a weapon first")
+    }
 }
 
 fn scavenge(inv: &mut Inventory, stats: &mut Stats) {
@@ -455,7 +486,10 @@ fn print_help() {
     println!("\t\t {}", "-5 energy, -5 water, -3 food".italic().dimmed());
     println!("{}:\t\t Rest to replenish your energy", "sleep".bold());
     println!("\t\t {}", "+35 energy".italic().dimmed());
-    println!("{}:\t\t COMING SOON", "hunt".bold()); //Hunt for food and fur to craft equipment
+    println!(
+        "{}:\t\t Hunt for food and fur to craft equipment",
+        "hunt".bold()
+    );
     println!(
         "\t\t {}",
         "-10 energy, -10 water, -6 food".italic().dimmed()
