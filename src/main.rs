@@ -16,7 +16,7 @@ mod camp;
 mod crafting;
 mod items;
 
-use crate::items::{Item, ItemProperties, CRAFTABLE_ITEMS, SCAVENGEABLE_ITEMS, HUNTABLE_ITEMS};
+use crate::items::{Item, ItemProperties, CRAFTABLE_ITEMS, HUNTABLE_ITEMS, SCAVENGEABLE_ITEMS};
 
 use crate::crafting::{print_recipes, recipes, RecipeCategory};
 
@@ -255,12 +255,12 @@ fn hunt(inv: &mut Inventory, stats: &mut Stats) {
         Some(_) => {
             if number_of_items == 0 {
                 println!("Your inventory is full. Remove at least one item to proceed.");
-            } else{
+            } else {
                 println!("{}", "Hunting…".italic().dimmed());
                 sleep(Duration::new(4, 0));
-                stats.energy.decrease(5.0);
-                stats.water.decrease(5.0);
-                stats.food.decrease(3.0);
+                stats.energy.decrease(10.0);
+                stats.water.decrease(10.0);
+                stats.food.decrease(6.0);
 
                 if rand::random() {
                     let item = HUNTABLE_ITEMS.first().unwrap().clone();
@@ -270,8 +270,8 @@ fn hunt(inv: &mut Inventory, stats: &mut Stats) {
                     println!("You were unable to track down any animal. Better luck next time!");
                 }
             }
-        },
-        None => println!("You need to craft a weapon first")
+        }
+        None => println!("You need to craft a weapon first"),
     }
 }
 
@@ -351,6 +351,14 @@ fn craft_item(
                 match upgrade as &str {
                     "fire" => can_be_crafted = can_be_crafted && fire.status != FireStatus::Out,
                     _ => println!("Unable to craft"),
+                }
+            }
+
+            for tool in &recipe.tools_needed {
+                let is_in_inventory = inv.iter().find(|i| i.id == *tool);
+
+                if let None = is_in_inventory {
+                    can_be_crafted = false;
                 }
             }
 

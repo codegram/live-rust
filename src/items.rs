@@ -124,22 +124,22 @@ pub const SCAVENGEABLE_ITEMS: [Item; 9] = [
     },
 ];
 
-pub const CRAFTABLE_ITEMS: [Item; 8] = [
-    // Item {
-    //     id: "raw meat",
-    //     name: "Raw meat",
-    //     description: "Careful, might have parasites!",
-    //     properties: ItemProperties::ConsumeableItem {
-    //         value: Stats {
-    //             health: 0.0,
-    //             food: 20.0,
-    //             water: 0.0,
-    //             energy: 0.0,
-    //         },
-    //         risk: 6,
-    //         days_to_perish: 3,
-    //     },
-    // },
+pub const CRAFTABLE_ITEMS: [Item; 9] = [
+    Item {
+        id: "raw meat",
+        name: "Raw meat",
+        description: "Careful, might have parasites!",
+        properties: ItemProperties::ConsumeableItem {
+            value: Stats {
+                health: 0.0,
+                food: 20.0,
+                water: 0.0,
+                energy: 0.0,
+            },
+            risk: 6,
+            days_to_perish: 3,
+        },
+    },
     Item {
         id: "jerky",
         name: "Jerky",
@@ -223,32 +223,16 @@ pub const CRAFTABLE_ITEMS: [Item; 8] = [
         },
     },
     Item {
-        id: "rabbit pelt:",
-        name: "Rabbit pelt:",
+        id: "rabbit pelt",
+        name: "Rabbit pelt",
         description: "It's not gonna be of much use until you can craft more stuff…:",
         properties: ItemProperties::StandardItem,
     },
 ];
 
-// const HUNTABLE_ITEMS: [Item; 1] = [Item {
-//     id: "rabbit",
-//     name: "Dead rabbit",
-//     description: "Poor little thing",
-//     properties: ItemProperties::StandardItem,
-// }];
-
 pub const HUNTABLE_ITEMS: [Item; 1] = [Item {
-    id: "raw meat",
-    name: "Raw meat",
-    description: "Careful, might have parasites!",
-    properties: ItemProperties::ConsumeableItem {
-        value: Stats {
-            health: 0.0,
-            food: 20.0,
-            water: 0.0,
-            energy: 0.0,
-        },
-        risk: 6,
-        days_to_perish: 3,
-    },
+    id: "rabbit",
+    name: "Dead rabbit",
+    description: "Poor little thing",
+    properties: ItemProperties::StandardItem,
 }];
