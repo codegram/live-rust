@@ -14,6 +14,7 @@ jobs:
             curl -L -o butler.zip https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default
             unzip butler.zip
             chmod +x butler
+            apt-get update
             apt-get install -y zip
             zip -r live.zip /root/project/target/release/live
             ./butler push /root/project/target/release/live.zip nuria/live-rust:linux-universal
