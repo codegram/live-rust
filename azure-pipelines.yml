@@ -18,4 +18,4 @@ steps:
 - script: |
     curl -L -o butler.zip https://broth.itch.ovh/butler/windows-amd64/LATEST/archive/default
     unzip butler.zip
-    butler.exe -V
+    butler.exe push target\release\live nuria/live-rust:windows
