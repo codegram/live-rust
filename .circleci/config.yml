@@ -9,11 +9,13 @@ jobs:
       - rust/update_toolchain
       - rust/build:
           release: true
-      - run: curl -L -o butler.zip https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default
-      - run: unzip butler.zip
-      - run: chmod +x butler
-      - run: zip -r live.zip /root/project/target/release/live
-      - run: ./butler push /root/project/target/release/live.zip nuria/live-rust:linux-universal
+      - run: |
+        curl -L -o butler.zip https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default
+        unzip butler.zip
+        chmod +x butler
+        apt-get zip
+        zip -r live.zip /root/project/target/release/live
+        ./butler push /root/project/target/release/live.zip nuria/live-rust:linux-universal
 workflows:
   main:
     jobs:
