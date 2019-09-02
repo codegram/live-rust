@@ -401,6 +401,12 @@ fn craft_item(
                     }
                 }
 
+                for tool in &recipe.tools_needed {
+                    let tool_inv = inv.iter_mut().find(|i| i.id == *tool).unwrap();
+
+                    tool_inv.decrease_use();
+                }
+
                 for item in items_supplied {
                     match recipe.category {
                         RecipeCategory::CampUpgrade => {

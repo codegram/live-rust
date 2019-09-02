@@ -49,6 +49,29 @@ impl fmt::Display for Item {
     }
 }
 
+impl Item {
+    pub fn decrease_use(&mut self) -> bool {
+        match self.properties {
+            ItemProperties::ToolItem {
+                ref mut uses_until_breakdown,
+            } => {
+                *uses_until_breakdown -= 1;
+                *uses_until_breakdown == 0
+            }
+            ItemProperties::WeaponItem {
+                ref mut uses_until_breakdown,
+            } => {
+                *uses_until_breakdown -= 1;
+                *uses_until_breakdown == 0
+            }
+            _ => {
+                println!("{}", "Item does not degrade".red());
+                false
+            }
+        }
+    }
+}
+
 pub const SCAVENGEABLE_ITEMS: [Item; 9] = [
     Item {
         id: "berries",
