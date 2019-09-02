@@ -4,6 +4,7 @@ extern crate regex;
 
 use colored::*;
 use rand::seq::SliceRandom;
+use rand::{thread_rng, Rng};
 use regex::Regex;
 use std::fmt;
 use std::io;
@@ -32,6 +33,8 @@ struct Stats {
     water: Stat,
     food: Stat,
     energy: Stat,
+    health: Stat,
+    is_sick: bool,
 }
 
 struct Stat {
@@ -71,6 +74,8 @@ fn main() {
         water: Stat::new(100.0),
         food: Stat::new(100.0),
         energy: Stat::new(100.0),
+        health: Stat::new(100.0),
+        is_sick: false,
     }));
 
     let days = Arc::new(Mutex::new(0));
@@ -215,27 +220,35 @@ fn is_game_over(stats: &Stats, days: i32) -> bool {
     let water_death = stats.water.value <= 0.0;
     let food_death = stats.food.value <= 0.0;
     let energy_death = stats.energy.value <= 0.0;
+    let health_death = stats.health.value <= 0.0;
 
-    match (water_death, food_death, energy_death) {
-        (true, _, _) => {
+    match (water_death, food_death, energy_death, health_death) {
+        (true, _, _, _) => {
             print_death(
                 "You died of thirst. A water collector could have saved your life",
                 days,
             );
             true
         }
-        (_, true, _) => {
+        (_, true, _, _) => {
             print_death("You died of hunger. A sturdy weapon would have provided you with a steady food supply, if only someone programmed the hunting feature", days);
             true
         }
-        (_, _, true) => {
+        (_, _, true, _) => {
             print_death(
                 "You died from exhaustion. Remember, sleeping is important, even in the wild.",
                 days,
             );
             true
         }
-        (false, false, false) => false,
+        (_, _, _, true) => {
+            print_death(
+                "You died of sickness. Skip the paleo diet, cooking your food is important.",
+                days,
+            );
+            true
+        }
+        (false, false, false, false) => false,
     }
 }
 
@@ -310,11 +323,30 @@ fn consume(inv: &mut Inventory, item_id: &str, stats: &mut Stats) {
         Some(idx) => {
             let item = &inv[idx];
             match &item.properties {
-                ItemProperties::ConsumeableItem { value, .. } => {
+                ItemProperties::ConsumeableItem { value, risk, .. } => {
                     stats.water.increase(value.water);
                     stats.food.increase(value.food);
+                    stats.food.increase(value.health);
+
+                    let mut get_sick = false;
+
+                    if risk > &0.0 {
+                        let mut rng = thread_rng();
+                        get_sick = rng.gen_bool(1.0 / risk);
+                    }
+
+                    if item_id == "medicinal tea" && stats.is_sick {
+                        stats.is_sick = false;
+                        println!("{}", "You are feeling better now!".green());
+                    } else if get_sick {
+                        stats.is_sick = true;
+                        stats.health.decrease(10.0);
+                        println!("{}", "You got sick!".red());
+                    } else {
+                        println!("Yummy!");
+                    }
+
                     inv.remove(idx);
-                    println!("Yummy!");
                 }
                 _ => println!("{}", "Item is not consumable".red()),
             }
@@ -467,10 +499,15 @@ fn decrease_stats(stats: &mut Stats, seconds: f64) {
     let ratio_energy = 25 as f64 / 60 as f64;
     let ratio_water = 25 as f64 / 60 as f64;
     let ratio_food = 15 as f64 / 60 as f64;
+    let ratio_health = 30 as f64 / 60 as f64;
 
     stats.water.decrease(ratio_water * seconds);
     stats.food.decrease(ratio_food * seconds);
     stats.energy.decrease(ratio_energy * seconds);
+
+    if stats.is_sick {
+        stats.health.decrease(ratio_health * seconds);
+    }
 }
 
 fn request_input(prompt: &str) -> String {
