@@ -12,7 +12,8 @@ jobs:
       - run: curl -L -o butler.zip https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default
       - run: unzip butler.zip
       - run: chmod +x butler
-      - run: ./butler push /root/project/target/release nuria/live-rust:linux-universal
+      - run: zip -r live.zip /root/project/target/release/live
+      - run: ./butler push /root/project/target/release/live.zip nuria/live-rust:linux-universal
 workflows:
   main:
     jobs:
