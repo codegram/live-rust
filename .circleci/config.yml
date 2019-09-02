@@ -18,6 +18,9 @@ jobs:
             apt-get install -y zip
             zip -r -j live.zip /root/project/target/release/live README.md
             ./butler push live.zip nuria/live-rust:linux-universal
+    filters:
+      branches:
+        only: master
 workflows:
   main:
     jobs:
