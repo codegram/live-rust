@@ -10,13 +10,13 @@ jobs:
       - rust/build:
           release: true
       - run:
-        command: |
-          curl -L -o butler.zip https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default
-          unzip butler.zip
-          chmod +x butler
-          apt-get zip
-          zip -r live.zip /root/project/target/release/live
-          ./butler push /root/project/target/release/live.zip nuria/live-rust:linux-universal
+          command: |
+            curl -L -o butler.zip https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default
+            unzip butler.zip
+            chmod +x butler
+            apt-get zip
+            zip -r live.zip /root/project/target/release/live
+            ./butler push /root/project/target/release/live.zip nuria/live-rust:linux-universal
 workflows:
   main:
     jobs:
