@@ -16,7 +16,7 @@ jobs:
             chmod +x butler
             apt-get update
             apt-get install -y zip
-            zip -r live.zip /root/project/target/release/live
+            zip -r live.zip /root/project/target/release/live README.md
             ./butler push live.zip nuria/live-rust:linux-universal
 workflows:
   main:
