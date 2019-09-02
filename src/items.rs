@@ -161,7 +161,7 @@ pub const CRAFTABLE_ITEMS: [Item; 9] = [
         description: "Cures you from sickness and restores health",
         properties: ItemProperties::ConsumeableItem {
             value: Stats {
-                health: 50.0,
+                health: 35.0,
                 food: 0.0,
                 water: 20.0,
                 energy: 0.0,

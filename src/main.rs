@@ -326,6 +326,7 @@ fn consume(inv: &mut Inventory, item_id: &str, stats: &mut Stats) {
                 ItemProperties::ConsumeableItem { value, risk, .. } => {
                     stats.water.increase(value.water);
                     stats.food.increase(value.food);
+                    stats.food.increase(value.health);
 
                     let mut get_sick = false;
 
@@ -334,7 +335,10 @@ fn consume(inv: &mut Inventory, item_id: &str, stats: &mut Stats) {
                         get_sick = rng.gen_bool(1.0 / risk);
                     }
 
-                    if get_sick {
+                    if item_id == "medicinal tea" && stats.is_sick {
+                        stats.is_sick = false;
+                        println!("You are feeling better now!");
+                    } else if get_sick {
                         stats.is_sick = true;
                         stats.health.decrease(10.0);
                         println!("{}", "You got sick!".red());
