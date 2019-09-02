@@ -1,8 +1,8 @@
 version: 2.1
-  orbs:
-    rust: glotrade/rust@0.1.3
-  workflows:
-    main:
-      jobs:
-        - rust/build:
-            release: true
+orbs:
+  rust: glotrade/rust@0.1.3
+workflows:
+  main:
+    jobs:
+      - rust/build:
+          release: true
