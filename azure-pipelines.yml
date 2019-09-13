@@ -18,7 +18,6 @@ steps:
 - script: |
     curl -L -o butler.zip https://broth.itch.ovh/butler/windows-amd64/LATEST/archive/default
     unzip butler.zip
-    dir /s /b /o:gn
-    butler.exe push target\release\live nuria/live-rust:windows
+    butler.exe push target\release\live.exe nuria/live-rust:windows
   env:
     BUTLER_API_KEY: $(BUTLER_API_KEY)
