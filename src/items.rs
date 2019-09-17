@@ -44,7 +44,42 @@ impl fmt::Display for Item {
                 value.water,
                 value.food
             ),
+            ItemProperties::ToolItem {
+                uses_until_breakdown,
+            }
+            | ItemProperties::WeaponItem {
+                uses_until_breakdown,
+            } => write!(
+                f,
+                "{}: {} ({} uses left)",
+                self.id.bold(),
+                self.description.dimmed(),
+                uses_until_breakdown
+            ),
             _ => write!(f, "{}: {}", self.id.bold(), self.description.dimmed()),
+        }
+    }
+}
+
+impl Item {
+    pub fn decrease_use(&mut self) -> bool {
+        match self.properties {
+            ItemProperties::ToolItem {
+                ref mut uses_until_breakdown,
+            } => {
+                *uses_until_breakdown -= 1;
+                *uses_until_breakdown == 0
+            }
+            ItemProperties::WeaponItem {
+                ref mut uses_until_breakdown,
+            } => {
+                *uses_until_breakdown -= 1;
+                *uses_until_breakdown == 0
+            }
+            _ => {
+                println!("{}", "Item does not degrade".red());
+                false
+            }
         }
     }
 }
