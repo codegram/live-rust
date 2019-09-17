@@ -262,10 +262,11 @@ fn hunt(inv: &mut Inventory, stats: &mut Stats) {
     let slots_left = INV_MAX - inv.len();
     let number_of_items = if slots_left < 3 { slots_left } else { 3 };
 
-    let weapon = inv.iter().position(|item| item.id == "bow");
+    let chosen_weapon = "bow";
+    let has_weapon = inv.iter_mut().find(|item| item.id == chosen_weapon);
 
-    match weapon {
-        Some(_) => {
+    match has_weapon {
+        Some(weapon) => {
             if number_of_items == 0 {
                 println!("Your inventory is full. Remove at least one item to proceed.");
             } else {
@@ -276,6 +277,13 @@ fn hunt(inv: &mut Inventory, stats: &mut Stats) {
                 stats.food.decrease(6.0);
 
                 if rand::random() {
+                    let broke_down = weapon.decrease_use();
+
+                    if broke_down {
+                        println!("{} broke down", chosen_weapon);
+                        remove_inventory(inv, chosen_weapon);
+                    }
+
                     let item = HUNTABLE_ITEMS.first().unwrap().clone();
                     println!("You found {}", item.name.bold());
                     inv.push(item);
@@ -404,7 +412,12 @@ fn craft_item(
                 for tool in &recipe.tools_needed {
                     let tool_inv = inv.iter_mut().find(|i| i.id == *tool).unwrap();
 
-                    tool_inv.decrease_use();
+                    let broke_down = tool_inv.decrease_use();
+
+                    if broke_down {
+                        println!("{} broke down", tool);
+                        remove_inventory(inv, tool);
+                    }
                 }
 
                 for item in items_supplied {

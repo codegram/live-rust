@@ -44,6 +44,18 @@ impl fmt::Display for Item {
                 value.water,
                 value.food
             ),
+            ItemProperties::ToolItem {
+                uses_until_breakdown,
+            }
+            | ItemProperties::WeaponItem {
+                uses_until_breakdown,
+            } => write!(
+                f,
+                "{}: {} ({} uses left)",
+                self.id.bold(),
+                self.description.dimmed(),
+                uses_until_breakdown
+            ),
             _ => write!(f, "{}: {}", self.id.bold(), self.description.dimmed()),
         }
     }
