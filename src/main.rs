@@ -280,7 +280,7 @@ fn hunt(inv: &mut Inventory, stats: &mut Stats) {
                     let broke_down = weapon.decrease_use();
 
                     if broke_down {
-                        println!("{} broke down", chosen_weapon);
+                        println!("{} {}", chosen_weapon.red(), "broke down".red());
                         remove_inventory(inv, chosen_weapon);
                     }
 
@@ -415,7 +415,7 @@ fn craft_item(
                     let broke_down = tool_inv.decrease_use();
 
                     if broke_down {
-                        println!("{} broke down", tool);
+                        println!("{} {}", tool.red(), "broke down".red());
                         remove_inventory(inv, tool);
                     }
                 }
