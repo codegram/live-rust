@@ -1,0 +1,23 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+pool:
+  vmImage: 'windows-latest'
+
+steps:
+- script: |
+    curl -sSf -o rustup-init.exe https://win.rustup.rs
+    echo "##vso[task.setvariable variable=PATH;]%PATH%;%USERPROFILE%\.cargo\bin"
+- script: |
+    cargo build --release
+- script: |
+    curl -L -o butler.zip https://broth.itch.ovh/butler/windows-amd64/LATEST/archive/default
+    unzip butler.zip
+    butler.exe push target\release\live.exe nuria/live-rust:windows
+  env:
+    BUTLER_API_KEY: $(BUTLER_API_KEY)
