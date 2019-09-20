@@ -63,6 +63,9 @@ impl Stat {
 }
 
 fn main() {
+    #[cfg(windows)]
+    control::set_virtual_terminal(true);
+
     print_help();
 
     let mut inventory: Inventory = Vec::new();
