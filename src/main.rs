@@ -68,32 +68,32 @@ fn main() {
     loop {
         if let Ok(action) = rx.try_recv() {
             match action.trim() {
-                "help" => print_help(),
-                "sleep" => rest(&mut stats.lock().unwrap()),
-                "hunt" => hunt(&mut inventory, &mut stats.lock().unwrap()),
-                "scavenge" => scavenge(&mut inventory, &mut stats.lock().unwrap()),
-                "inventory" => print_inventory(&inventory),
-                "stats" => {
+                "help" | "h" => print_help(),
+                "rest" | "r" => rest(&mut stats.lock().unwrap()),
+                "hunt" | "ht" => hunt(&mut inventory, &mut stats.lock().unwrap()),
+                "scavenge" | "s" => scavenge(&mut inventory, &mut stats.lock().unwrap()),
+                "inventory" | "i" => print_inventory(&inventory),
+                "stats" | "st" => {
                     let print_stats = stats.lock().unwrap();
                     println!("Current {:#?}", *print_stats);
                 }
-                "days" => {
+                "days" | "d" => {
                     let print_days = days.lock().unwrap();
 
                     println!("Days survived so far: {:?}", *print_days)
                 }
-                "recipes" => print_recipes(),
-                "consume" => {
+                "recipes" | "re" => print_recipes(),
+                "consume" | "c" => {
                     let input = request_input("What do you want to eat/drink?");
                     consume(&mut inventory, input.trim(), &mut stats.lock().unwrap());
                 }
-                "stoke" => {
+                "stoke" | "f" => {
                     stoke_fire(&mut inventory, &mut fire.lock().unwrap());
                 }
-                "collect" => {
+                "collect" | "co" => {
                     collect(&mut inventory, &mut water_collector.lock().unwrap());
                 }
-                "remove" => {
+                "remove" | "rm" => {
                     let input = request_input("What do you want to remove?");
                     remove_inventory(&mut inventory, input.trim());
                 }
@@ -102,7 +102,7 @@ fn main() {
                     break;
                 }
                 _ => {
-                    let re = Regex::new(r"(consume|remove|craft)(.+)").unwrap();
+                    let re = Regex::new(r"(consume|c|remove|rm|craft|cf)( .+)").unwrap();
 
                     let capture_groups = re.captures_iter(action.trim());
 
@@ -113,15 +113,15 @@ fn main() {
                         let target = &cap[2].trim();
 
                         matched = match action {
-                            "remove" => {
+                            "remove" | "rm" => {
                                 remove_inventory(&mut inventory, target);
                                 true
                             }
-                            "consume" => {
+                            "consume" | "c" => {
                                 consume(&mut inventory, target, &mut stats.lock().unwrap());
                                 true
                             }
-                            "craft" => {
+                            "craft" | "cf" => {
                                 craft_item(
                                     &mut inventory,
                                     target,
@@ -293,37 +293,40 @@ fn print_help() {
     println!("\n*** {} ***", "L I V E".bold());
     println!("How long can you survive in the wilderness?\n");
     println!("Actions:\n");
-    println!("{}:\t Find useful items to survive", "scavenge".bold());
-    println!("\t\t {}", "-5 energy, -5 water, -3 food".italic().dimmed());
-    println!("{}:\t\t Rest to replenish your energy", "sleep".bold());
-    println!("\t\t {}", "+35 energy".italic().dimmed());
+    println!("{}:\t  Find useful items to survive", "scavenge | s".bold());
+    println!("\t\t  {}", "-3 energy, -3 water, -1 food".italic().dimmed());
+    println!("{}:\t  Rest to replenish your energy", "rest | r".bold());
+    println!("\t\t  {}", "+50 energy".italic().dimmed());
     println!(
-        "{}:\t\t Hunt for food and fur to craft equipment",
-        "hunt".bold()
+        "{}:\t  Hunt for food and fur to craft equipment",
+        "hunt | ht".bold()
+    );
+    println!("\t\t  {}", "-8 energy, -8 water, -4 food".italic().dimmed());
+    println!(
+        "\n{}:\t  Remove an item from inventory",
+        "remove | rm".bold()
     );
     println!(
-        "\t\t {}",
-        "-10 energy, -10 water, -6 food".italic().dimmed()
-    );
-    println!("\n{}:\t\t Remove an item from inventory", "remove".bold());
-    println!(
-        "{}:\t Consume an item to replenish food or water",
-        "consume".bold()
+        "{}:\t  Consume an item to replenish food or water",
+        "consume | c".bold()
     );
     println!(
-        "{}:\t List all the available recipes to craft items",
-        "recipes".bold()
+        "{}:\t  List all the available recipes to craft items",
+        "recipes | re".bold()
     );
     println!(
-        "{} <item>:\t Combine items to create other items",
-        "craft".bold()
+        "{} <item>: Combine items to create other items",
+        "craft | cf".bold()
     );
-    println!("{}:\t\t Add wood to stoke the fire", "stoke".bold());
-    println!("{}:\t Add clean water to your inventory", "collect".bold());
-    println!("{}:\t List items on inventory", "inventory".bold());
-    println!("{}:\t\t List your current stats", "stats".bold());
-    println!("{}:\t\t List the days survived so far", "days".bold());
-    println!("{}:\t\t Print this instructions again", "help".bold());
+    println!("{}:\t  Add wood to stoke the fire", "stoke | f".bold());
+    println!(
+        "{}:\t  Add clean water to your inventory",
+        "collect | co".bold()
+    );
+    println!("{}:\t  List items on inventory", "inventory | i".bold());
+    println!("{}:\t  List your current stats", "stats | st".bold());
+    println!("{}:\t  List the days survived so far", "days | d".bold());
+    println!("{}:\t  Print this instructions again", "help | h".bold());
     println!("\n");
 }
 
