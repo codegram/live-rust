@@ -1,7 +1,7 @@
 use colored::*;
 use std::fmt;
 
-use crate::camp::{Fire, FireStatus, WaterCollector};
+use crate::camp::{CollectorStatus, Fire, FireStatus, WaterCollector};
 use crate::inventory::{remove_inventory, Inventory};
 use crate::items::{Item, ItemProperties, ItemStats};
 
@@ -23,7 +23,7 @@ impl fmt::Display for Recipe {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum RecipeCategory {
     Consumable,
     Tool,
@@ -280,6 +280,25 @@ pub fn craft_item(
             let items_needed = &recipe.items_needed;
             let items_supplied = &recipe.result;
             let mut can_be_crafted = true;
+            let mut error_msg = "You don't have enough items or upgrades";
+
+            if recipe.category == RecipeCategory::CampUpgrade {
+                match recipe_id {
+                    "fire" => {
+                        can_be_crafted = fire.status == FireStatus::Out;
+                        if !can_be_crafted {
+                            error_msg = "Fire is already burning";
+                        }
+                    }
+                    "water collector" => {
+                        can_be_crafted = collector.status == CollectorStatus::Out;
+                        if !can_be_crafted {
+                            error_msg = "Water collector already crafted";
+                        }
+                    }
+                    _ => {}
+                }
+            }
 
             for item in items_needed {
                 let amount_in_inventory = inv.iter().filter(|i| i.id == item.0).count();
@@ -348,8 +367,9 @@ pub fn craft_item(
                 }
             } else {
                 println!(
-                    "{} You don't have enough items or upgrades",
-                    "Failed to craft.".red().bold()
+                    "{} {}",
+                    "Failed to craft.".red().bold(),
+                    error_msg
                 );
             }
         }
