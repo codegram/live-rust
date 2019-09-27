@@ -1,6 +1,10 @@
 use colored::*;
 use std::fmt;
 
+use crate::camp::{Fire, FireStatus, WaterCollector};
+use crate::inventory::{remove_inventory, Inventory};
+use crate::items::{Item, ItemProperties, ItemStats};
+
 #[derive(Debug)]
 pub struct Recipe {
     pub id: &'static str,
@@ -27,6 +31,112 @@ pub enum RecipeCategory {
     CampUpgrade,
     Other,
 }
+
+pub const CRAFTABLE_ITEMS: [Item; 9] = [
+    Item {
+        id: "raw meat",
+        name: "Raw meat",
+        description: "Careful, might have parasites!",
+        properties: ItemProperties::ConsumeableItem {
+            value: ItemStats {
+                health: 0.0,
+                food: 20.0,
+                water: 0.0,
+                energy: 0.0,
+            },
+            risk: 3.0,
+            days_to_perish: 3,
+        },
+    },
+    Item {
+        id: "jerky",
+        name: "Jerky",
+        description: "Long lasting nourishment",
+        properties: ItemProperties::ConsumeableItem {
+            value: ItemStats {
+                health: 0.0,
+                food: 20.0,
+                water: 0.0,
+                energy: 0.0,
+            },
+            risk: 0.0,
+            days_to_perish: 0,
+        },
+    },
+    Item {
+        id: "medicinal tea",
+        name: "Medicinal tea",
+        description: "Cures you from sickness and restores health",
+        properties: ItemProperties::ConsumeableItem {
+            value: ItemStats {
+                health: 35.0,
+                food: 0.0,
+                water: 20.0,
+                energy: 0.0,
+            },
+            risk: 0.0,
+            days_to_perish: 0,
+        },
+    },
+    Item {
+        id: "cooked meat",
+        name: "Cooked meat",
+        description: "Tasty nourishment",
+        properties: ItemProperties::ConsumeableItem {
+            value: ItemStats {
+                health: 0.0,
+                food: 20.0,
+                water: 0.0,
+                energy: 0.0,
+            },
+            risk: 0.0,
+            days_to_perish: 10,
+        },
+    },
+    Item {
+        id: "clean water",
+        name: "Clean water",
+        description: "Safe for drink",
+        properties: ItemProperties::ConsumeableItem {
+            value: ItemStats {
+                health: 0.0,
+                food: 0.0,
+                water: 20.0,
+                energy: 0.0,
+            },
+            risk: 0.0,
+            days_to_perish: 0,
+        },
+    },
+    Item {
+        id: "rope",
+        name: "Rope",
+        description: "Useful for crafting",
+        properties: ItemProperties::StandardItem,
+    },
+    Item {
+        id: "bow",
+        name: "Bow",
+        description: "Lets you hunt and defend yourself:",
+        properties: ItemProperties::WeaponItem {
+            uses_until_breakdown: 5,
+        },
+    },
+    Item {
+        id: "knife",
+        name: "Knife",
+        description: "Useful tool",
+        properties: ItemProperties::ToolItem {
+            uses_until_breakdown: 5,
+        },
+    },
+    Item {
+        id: "rabbit pelt",
+        name: "Rabbit pelt",
+        description: "It's not gonna be of much use until you can craft more stuff…:",
+        properties: ItemProperties::StandardItem,
+    },
+];
 
 pub fn recipes() -> [Recipe; 10] {
     return [
@@ -153,5 +263,100 @@ pub fn print_recipes() {
         for tool in &recipe.tools_needed {
             println!("\tNeeds {}", tool);
         }
+    }
+}
+
+pub fn craft_item(
+    inv: &mut Inventory,
+    recipe_id: &str,
+    fire: &mut Fire,
+    collector: &mut WaterCollector,
+) {
+    let recipes = recipes();
+    let recipe = recipes.iter().find(|&recipe| recipe.id == recipe_id);
+
+    match recipe {
+        Some(recipe) => {
+            let items_needed = &recipe.items_needed;
+            let items_supplied = &recipe.result;
+            let mut can_be_crafted = true;
+
+            for item in items_needed {
+                let amount_in_inventory = inv.iter().filter(|i| i.id == item.0).count();
+                can_be_crafted = can_be_crafted && amount_in_inventory >= item.1;
+            }
+
+            for upgrade in &recipe.upgrades_needed {
+                match upgrade as &str {
+                    "fire" => can_be_crafted = can_be_crafted && fire.status != FireStatus::Out,
+                    _ => println!("Unable to craft"),
+                }
+            }
+
+            for tool in &recipe.tools_needed {
+                let is_in_inventory = inv.iter().find(|i| i.id == *tool);
+
+                if let None = is_in_inventory {
+                    can_be_crafted = false;
+                }
+            }
+
+            if can_be_crafted {
+                for item in items_needed {
+                    for _ in 0..item.1 {
+                        remove_inventory(inv, item.0);
+                    }
+                }
+
+                for tool in &recipe.tools_needed {
+                    let tool_inv = inv.iter_mut().find(|i| i.id == *tool).unwrap();
+
+                    let broke_down = tool_inv.decrease_use();
+
+                    if broke_down {
+                        println!("{} {}", tool.red(), "broke down".red());
+                        remove_inventory(inv, tool);
+                    }
+                }
+
+                for item in items_supplied {
+                    match recipe.category {
+                        RecipeCategory::CampUpgrade => {
+                            println!("craft upgrade {}", item);
+
+                            match item as &str {
+                                "fire" => {
+                                    fire.craft();
+                                    println!("Fire is burning {:?}", fire.status)
+                                }
+                                "water collector" => {
+                                    collector.craft();
+                                }
+                                _ => println!("Unable to craft {}", item),
+                            }
+                        }
+                        _ => {
+                            let result = CRAFTABLE_ITEMS
+                                .iter()
+                                .find(|craftable| craftable.id == *item)
+                                .unwrap()
+                                .clone();
+                            println!("You got {}", result.name.bold());
+                            inv.push(result);
+                        }
+                    }
+                }
+            } else {
+                println!(
+                    "{} You don't have enough items or upgrades",
+                    "Failed to craft.".red().bold()
+                );
+            }
+        }
+        None => println!(
+            "{} Type '{}' to list existing recipies.",
+            "Invalid recipe.".red(),
+            "crafting".bold()
+        ),
     }
 }

@@ -1,5 +1,9 @@
 use crate::colored::Colorize;
 
+use crate::crafting::CRAFTABLE_ITEMS;
+use crate::inventory::INV_MAX;
+use crate::inventory::{remove_inventory, Inventory};
+
 #[derive(Debug)]
 pub struct Fire {
   pub status: FireStatus,
@@ -124,5 +128,37 @@ impl WaterCollector {
       self.status = CollectorStatus::Collecting;
       println!("{}", "Collecting…".italic().dimmed());
     }
+  }
+}
+
+pub fn stoke_fire(inv: &mut Inventory, fire: &mut Fire) {
+  if fire.status != FireStatus::Out {
+    if remove_inventory(inv, "wood") {
+      fire.increase_status();
+    } else {
+      println!("{}", "You don't have wood in your inventory".red());
+    }
+  } else {
+    println!("{}", "You don't have a fire in your camp".red());
+  }
+}
+
+pub fn collect(inv: &mut Inventory, collector: &mut WaterCollector) {
+  if inv.len() == INV_MAX {
+    println!("{}", "Your inventory is full".red());
+    return;
+  }
+
+  if collector.status == CollectorStatus::Waiting {
+    let result = CRAFTABLE_ITEMS
+      .iter()
+      .find(|craftable| craftable.id == "clean water")
+      .unwrap()
+      .clone();
+    println!("You got {}", result.name.bold());
+    inv.push(result);
+    collector.collect();
+  } else {
+    println!("{}", "There is nothing to collect".red());
   }
 }

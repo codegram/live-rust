@@ -3,10 +3,8 @@ extern crate rand;
 extern crate regex;
 
 use colored::*;
-use rand::seq::SliceRandom;
 use rand::{thread_rng, Rng};
 use regex::Regex;
-use std::fmt;
 use std::io;
 use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
@@ -15,52 +13,19 @@ use std::time::{Duration, Instant};
 
 mod camp;
 mod crafting;
+mod hunt;
+mod inventory;
 mod items;
+mod scavenge;
+mod stats;
 
-use crate::items::{Item, ItemProperties, CRAFTABLE_ITEMS, HUNTABLE_ITEMS, SCAVENGEABLE_ITEMS};
-
-use crate::crafting::{print_recipes, recipes, RecipeCategory};
-
-use crate::camp::{CollectorStatus, Fire, FireStatus, WaterCollector};
-
-const MAX: f64 = 100.0;
-const INV_MAX: usize = 10;
-
-type Inventory = Vec<Item>;
-
-#[derive(Debug)]
-struct Stats {
-    water: Stat,
-    food: Stat,
-    energy: Stat,
-    health: Stat,
-    is_sick: bool,
-}
-
-struct Stat {
-    value: f64,
-}
-
-impl fmt::Debug for Stat {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:.*}", 2, self.value)
-    }
-}
-
-impl Stat {
-    fn new(value: f64) -> Stat {
-        Stat { value }
-    }
-    fn increase(&mut self, amount: f64) {
-        self.value = self.value + amount;
-        if self.value > MAX {
-            self.value = MAX;
-        }
-    }
-    fn decrease(&mut self, amount: f64) {
-        self.value = self.value - amount;
-    }
-}
+use crate::camp::{collect, stoke_fire, Fire, WaterCollector};
+use crate::crafting::{craft_item, print_recipes};
+use crate::hunt::hunt;
+use crate::inventory::{print_inventory, remove_inventory, Inventory};
+use crate::items::ItemProperties;
+use crate::scavenge::scavenge;
+use crate::stats::{decrease_stats, Stat, Stats};
 
 fn main() {
     #[cfg(windows)]
@@ -234,7 +199,7 @@ fn is_game_over(stats: &Stats, days: i32) -> bool {
             true
         }
         (_, true, _, _) => {
-            print_death("You died of hunger. A sturdy weapon would have provided you with a steady food supply, if only someone programmed the hunting feature", days);
+            print_death("You died of hunger. A sturdy weapon would have provided you with a steady food supply.", days);
             true
         }
         (_, _, true, _) => {
@@ -259,65 +224,6 @@ fn print_death(cause_of_death: &str, days: i32) {
     println!("*** {} ***", "G A M E  O V E R".red().bold());
     println!("You survived {} days", days.to_string().bold());
     println!("{}", cause_of_death)
-}
-
-fn hunt(inv: &mut Inventory, stats: &mut Stats) {
-    let slots_left = INV_MAX - inv.len();
-    let number_of_items = if slots_left < 3 { slots_left } else { 3 };
-
-    let chosen_weapon = "bow";
-    let has_weapon = inv.iter_mut().find(|item| item.id == chosen_weapon);
-
-    match has_weapon {
-        Some(weapon) => {
-            if number_of_items == 0 {
-                println!("Your inventory is full. Remove at least one item to proceed.");
-            } else {
-                println!("{}", "Hunting…".italic().dimmed());
-                sleep(Duration::new(4, 0));
-                stats.energy.decrease(10.0);
-                stats.water.decrease(10.0);
-                stats.food.decrease(6.0);
-
-                if rand::random() {
-                    let broke_down = weapon.decrease_use();
-
-                    if broke_down {
-                        println!("{} {}", chosen_weapon.red(), "broke down".red());
-                        remove_inventory(inv, chosen_weapon);
-                    }
-
-                    let item = HUNTABLE_ITEMS.first().unwrap().clone();
-                    println!("You found {}", item.name.bold());
-                    inv.push(item);
-                } else {
-                    println!("You were unable to track down any animal. Better luck next time!");
-                }
-            }
-        }
-        None => println!("You need to craft a weapon first"),
-    }
-}
-
-fn scavenge(inv: &mut Inventory, stats: &mut Stats) {
-    let slots_left = INV_MAX - inv.len();
-    let number_of_items = if slots_left < 3 { slots_left } else { 3 };
-
-    if number_of_items == 0 {
-        println!("Your inventory is full. Remove at least one item to proceed.");
-    } else {
-        let mut rng = rand::thread_rng();
-        println!("{}", "Scavenging…".italic().dimmed());
-        sleep(Duration::new(2, 0));
-        stats.energy.decrease(5.0);
-        stats.water.decrease(5.0);
-        stats.food.decrease(3.0);
-        for _number in 0..number_of_items {
-            let item = SCAVENGEABLE_ITEMS.choose(&mut rng).unwrap().clone();
-            println!("You found {}", item.name.bold());
-            inv.push(item);
-        }
-    }
 }
 
 fn rest(stats: &mut Stats) {
@@ -370,168 +276,6 @@ fn consume(inv: &mut Inventory, item_id: &str, stats: &mut Stats) {
     }
 }
 
-fn craft_item(
-    inv: &mut Inventory,
-    recipe_id: &str,
-    fire: &mut Fire,
-    collector: &mut WaterCollector,
-) {
-    let recipes = recipes();
-    let recipe = recipes.iter().find(|&recipe| recipe.id == recipe_id);
-
-    match recipe {
-        Some(recipe) => {
-            let items_needed = &recipe.items_needed;
-            let items_supplied = &recipe.result;
-            let mut can_be_crafted = true;
-
-            for item in items_needed {
-                let amount_in_inventory = inv.iter().filter(|i| i.id == item.0).count();
-                can_be_crafted = can_be_crafted && amount_in_inventory >= item.1;
-            }
-
-            for upgrade in &recipe.upgrades_needed {
-                match upgrade as &str {
-                    "fire" => can_be_crafted = can_be_crafted && fire.status != FireStatus::Out,
-                    _ => println!("Unable to craft"),
-                }
-            }
-
-            for tool in &recipe.tools_needed {
-                let is_in_inventory = inv.iter().find(|i| i.id == *tool);
-
-                if let None = is_in_inventory {
-                    can_be_crafted = false;
-                }
-            }
-
-            if can_be_crafted {
-                for item in items_needed {
-                    for _ in 0..item.1 {
-                        remove_inventory(inv, item.0);
-                    }
-                }
-
-                for tool in &recipe.tools_needed {
-                    let tool_inv = inv.iter_mut().find(|i| i.id == *tool).unwrap();
-
-                    let broke_down = tool_inv.decrease_use();
-
-                    if broke_down {
-                        println!("{} {}", tool.red(), "broke down".red());
-                        remove_inventory(inv, tool);
-                    }
-                }
-
-                for item in items_supplied {
-                    match recipe.category {
-                        RecipeCategory::CampUpgrade => {
-                            println!("craft upgrade {}", item);
-
-                            match item as &str {
-                                "fire" => {
-                                    fire.craft();
-                                    println!("Fire is burning {:?}", fire.status)
-                                }
-                                "water collector" => {
-                                    collector.craft();
-                                }
-                                _ => println!("Unable to craft {}", item),
-                            }
-                        }
-                        _ => {
-                            let result = CRAFTABLE_ITEMS
-                                .iter()
-                                .find(|craftable| craftable.id == *item)
-                                .unwrap()
-                                .clone();
-                            println!("You got {}", result.name.bold());
-                            inv.push(result);
-                        }
-                    }
-                }
-            } else {
-                println!(
-                    "{} You don't have enough items or upgrades",
-                    "Failed to craft.".red().bold()
-                );
-            }
-        }
-        None => println!(
-            "{} Type '{}' to list existing recipies.",
-            "Invalid recipe.".red(),
-            "crafting".bold()
-        ),
-    }
-}
-
-fn remove_inventory(inv: &mut Inventory, item_id: &str) -> bool {
-    let item_idx = inv.iter().position(|item| item.id == item_id);
-
-    match item_idx {
-        Some(idx) => {
-            inv.remove(idx);
-            println!("{}", "Item removed".green());
-            true
-        }
-        None => {
-            println!(
-                "{} Type '{}' to list available items.",
-                "Item not in inventory.".red(),
-                "inventory".bold()
-            );
-            false
-        }
-    }
-}
-
-fn stoke_fire(inv: &mut Inventory, fire: &mut Fire) {
-    if fire.status != FireStatus::Out {
-        if remove_inventory(inv, "wood") {
-            fire.increase_status();
-        } else {
-            println!("{}", "You don't have wood in your inventory".red());
-        }
-    } else {
-        println!("{}", "You don't have a fire in your camp".red());
-    }
-}
-
-fn collect(inv: &mut Inventory, collector: &mut WaterCollector) {
-    if inv.len() == INV_MAX {
-        println!("{}", "Your inventory is full".red());
-        return;
-    }
-
-    if collector.status == CollectorStatus::Waiting {
-        let result = CRAFTABLE_ITEMS
-            .iter()
-            .find(|craftable| craftable.id == "clean water")
-            .unwrap()
-            .clone();
-        println!("You got {}", result.name.bold());
-        inv.push(result);
-        collector.collect();
-    } else {
-        println!("{}", "There is nothing to collect".red());
-    }
-}
-
-fn decrease_stats(stats: &mut Stats, seconds: f64) {
-    let ratio_energy = 25 as f64 / 60 as f64;
-    let ratio_water = 25 as f64 / 60 as f64;
-    let ratio_food = 15 as f64 / 60 as f64;
-    let ratio_health = 30 as f64 / 60 as f64;
-
-    stats.water.decrease(ratio_water * seconds);
-    stats.food.decrease(ratio_food * seconds);
-    stats.energy.decrease(ratio_energy * seconds);
-
-    if stats.is_sick {
-        stats.health.decrease(ratio_health * seconds);
-    }
-}
-
 fn request_input(prompt: &str) -> String {
     println!("{}", prompt.bold());
 
@@ -581,13 +325,6 @@ fn print_help() {
     println!("{}:\t\t List the days survived so far", "days".bold());
     println!("{}:\t\t Print this instructions again", "help".bold());
     println!("\n");
-}
-
-fn print_inventory(inventory: &Inventory) {
-    println!("Items in your backpack:");
-    for item in inventory {
-        println!("{}", item);
-    }
 }
 
 // This is a really cool function but I prefer not to use it until I have a proper understanding of lifetimes
