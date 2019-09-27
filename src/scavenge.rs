@@ -64,8 +64,8 @@ const SCAVENGEABLE_ITEMS: [Item; 9] = [
   },
   Item {
     id: "bottle",
-    name: "Empty bottle",
-    description: "Useful for crafting",
+    name: "Bottle",
+    description: "Empty, useful for crafting",
     properties: ItemProperties::StandardItem,
   },
   Item {
@@ -75,8 +75,8 @@ const SCAVENGEABLE_ITEMS: [Item; 9] = [
     properties: ItemProperties::StandardItem,
   },
   Item {
-    id: "medicinal herbs",
-    name: "Medicinal herbs",
+    id: "herbs",
+    name: "Herbs",
     description: "Healing properties when brewed",
     properties: ItemProperties::StandardItem,
   },

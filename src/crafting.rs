@@ -204,7 +204,7 @@ pub fn recipes() -> [Recipe; 10] {
             id: "medicinal tea",
             name: "Medicinal tea",
             description: "",
-            items_needed: vec![("clean water", 1), ("medicinal herbs", 1)],
+            items_needed: vec![("clean water", 1), ("herbs", 1)],
             tools_needed: vec![],
             upgrades_needed: vec![],
             result: vec!["medicinal tea"],
