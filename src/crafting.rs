@@ -40,7 +40,7 @@ pub const CRAFTABLE_ITEMS: [Item; 9] = [
         properties: ItemProperties::ConsumeableItem {
             value: ItemStats {
                 health: 0.0,
-                food: 20.0,
+                food: 25.0,
                 water: 0.0,
                 energy: 0.0,
             },
@@ -55,7 +55,7 @@ pub const CRAFTABLE_ITEMS: [Item; 9] = [
         properties: ItemProperties::ConsumeableItem {
             value: ItemStats {
                 health: 0.0,
-                food: 20.0,
+                food: 25.0,
                 water: 0.0,
                 energy: 0.0,
             },
@@ -85,7 +85,7 @@ pub const CRAFTABLE_ITEMS: [Item; 9] = [
         properties: ItemProperties::ConsumeableItem {
             value: ItemStats {
                 health: 0.0,
-                food: 20.0,
+                food: 25.0,
                 water: 0.0,
                 energy: 0.0,
             },
@@ -204,7 +204,7 @@ pub fn recipes() -> [Recipe; 10] {
             id: "medicinal tea",
             name: "Medicinal tea",
             description: "",
-            items_needed: vec![("clean water", 1), ("medicinal herbs", 1)],
+            items_needed: vec![("clean water", 1), ("herbs", 1)],
             tools_needed: vec![],
             upgrades_needed: vec![],
             result: vec!["medicinal tea"],
