@@ -229,7 +229,7 @@ fn print_death(cause_of_death: &str, days: i32) {
 fn rest(stats: &mut Stats) {
     println!("{}", "Sleeping…".italic().dimmed());
     sleep(Duration::new(2, 0));
-    stats.energy.increase(35.0);
+    stats.energy.increase(50.0);
     println!("You wake up refreshed");
 }
 

@@ -92,9 +92,9 @@ pub fn scavenge(inv: &mut Inventory, stats: &mut Stats) {
     let mut rng = rand::thread_rng();
     println!("{}", "Scavenging…".italic().dimmed());
     sleep(Duration::new(2, 0));
-    stats.energy.decrease(5.0);
-    stats.water.decrease(5.0);
-    stats.food.decrease(3.0);
+    stats.energy.decrease(3.0);
+    stats.water.decrease(3.0);
+    stats.food.decrease(1.0);
     for _number in 0..number_of_items {
       let item = SCAVENGEABLE_ITEMS.choose(&mut rng).unwrap().clone();
       println!("You found {}", item.name.bold());

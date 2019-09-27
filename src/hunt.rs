@@ -27,9 +27,9 @@ pub fn hunt(inv: &mut Inventory, stats: &mut Stats) {
       } else {
         println!("{}", "Hunting…".italic().dimmed());
         sleep(Duration::new(4, 0));
-        stats.energy.decrease(10.0);
-        stats.water.decrease(10.0);
-        stats.food.decrease(6.0);
+        stats.energy.decrease(8.0);
+        stats.water.decrease(8.0);
+        stats.food.decrease(4.0);
 
         if rand::random() {
           let broke_down = weapon.decrease_use();

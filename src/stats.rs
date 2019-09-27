@@ -37,9 +37,9 @@ impl Stat {
 }
 
 pub fn decrease_stats(stats: &mut Stats, seconds: f64) {
-    let ratio_energy = 25 as f64 / 60 as f64;
-    let ratio_water = 25 as f64 / 60 as f64;
-    let ratio_food = 15 as f64 / 60 as f64;
+    let ratio_energy = 20 as f64 / 60 as f64;
+    let ratio_water = 20 as f64 / 60 as f64;
+    let ratio_food = 10 as f64 / 60 as f64;
     let ratio_health = 30 as f64 / 60 as f64;
 
     stats.water.decrease(ratio_water * seconds);
