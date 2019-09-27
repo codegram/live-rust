@@ -68,9 +68,9 @@ fn main() {
     loop {
         if let Ok(action) = rx.try_recv() {
             match action.trim() {
-                "help" | "h" => print_help(),
+                "help" => print_help(),
                 "rest" | "r" => rest(&mut stats.lock().unwrap()),
-                "hunt" | "ht" => hunt(&mut inventory, &mut stats.lock().unwrap()),
+                "hunt" | "h" => hunt(&mut inventory, &mut stats.lock().unwrap()),
                 "scavenge" | "s" => scavenge(&mut inventory, &mut stats.lock().unwrap()),
                 "inventory" | "i" => print_inventory(&inventory),
                 "stats" | "st" => {
@@ -299,7 +299,7 @@ fn print_help() {
     println!("\t\t  {}", "+50 energy".italic().dimmed());
     println!(
         "{}:\t  Hunt for food and fur to craft equipment",
-        "hunt | ht".bold()
+        "hunt | h".bold()
     );
     println!("\t\t  {}", "-8 energy, -8 water, -4 food".italic().dimmed());
     println!(
@@ -326,7 +326,7 @@ fn print_help() {
     println!("{}:\t  List items on inventory", "inventory | i".bold());
     println!("{}:\t  List your current stats", "stats | st".bold());
     println!("{}:\t  List the days survived so far", "days | d".bold());
-    println!("{}:\t  Print this instructions again", "help | h".bold());
+    println!("{}:\t\t  Print this instructions again", "help".bold());
     println!("\n");
 }
 
