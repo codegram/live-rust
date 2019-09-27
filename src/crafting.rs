@@ -40,7 +40,7 @@ pub const CRAFTABLE_ITEMS: [Item; 9] = [
         properties: ItemProperties::ConsumeableItem {
             value: ItemStats {
                 health: 0.0,
-                food: 20.0,
+                food: 25.0,
                 water: 0.0,
                 energy: 0.0,
             },
@@ -55,7 +55,7 @@ pub const CRAFTABLE_ITEMS: [Item; 9] = [
         properties: ItemProperties::ConsumeableItem {
             value: ItemStats {
                 health: 0.0,
-                food: 20.0,
+                food: 25.0,
                 water: 0.0,
                 energy: 0.0,
             },
@@ -85,7 +85,7 @@ pub const CRAFTABLE_ITEMS: [Item; 9] = [
         properties: ItemProperties::ConsumeableItem {
             value: ItemStats {
                 health: 0.0,
-                food: 20.0,
+                food: 25.0,
                 water: 0.0,
                 energy: 0.0,
             },
