@@ -165,9 +165,8 @@ pub fn collect(inv: &mut Inventory, collector: &mut WaterCollector) {
 
 #[cfg(test)]
 mod tests {
-  use crate::items::{Item, ItemProperties};
-  // Note this useful idiom: importing names from outer (for mod tests) scope.
   use super::*;
+  use crate::items::{Item, ItemProperties};
 
   #[test]
   fn test_stoke_fire() {
