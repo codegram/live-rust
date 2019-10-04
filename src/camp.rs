@@ -162,3 +162,35 @@ pub fn collect(inv: &mut Inventory, collector: &mut WaterCollector) {
     println!("{}", "There is nothing to collect".red());
   }
 }
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+  use crate::items::{Item, ItemProperties};
+
+  #[test]
+  fn test_stoke_fire() {
+    let mut inventory: Inventory = Vec::new();
+    inventory.push(Item {
+      id: "wood",
+      name: "Wood",
+      description: "Useful for crafting",
+      properties: ItemProperties::StandardItem,
+    });
+    let mut fire = Fire::new();
+    fire.status = FireStatus::Regular;
+    stoke_fire(&mut inventory, &mut fire);
+    assert_eq!(fire.status, FireStatus::Hot);
+    assert_eq!(inventory.len(), 0);
+  }
+
+  #[test]
+  fn test_collect() {
+    let mut inventory: Inventory = Vec::new();
+    let mut collector = WaterCollector::new();
+    collector.status = CollectorStatus::Waiting;
+    collect(&mut inventory, &mut collector);
+    assert_eq!(inventory.len(), 1);
+    assert_eq!(collector.status, CollectorStatus::Collecting);
+  }
+}
