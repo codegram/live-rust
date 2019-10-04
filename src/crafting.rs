@@ -366,11 +366,7 @@ pub fn craft_item(
                     }
                 }
             } else {
-                println!(
-                    "{} {}",
-                    "Failed to craft.".red().bold(),
-                    error_msg
-                );
+                println!("{} {}", "Failed to craft.".red().bold(), error_msg);
             }
         }
         None => println!(

@@ -50,3 +50,26 @@ pub fn decrease_stats(stats: &mut Stats, seconds: f64) {
         stats.health.decrease(ratio_health * seconds);
     }
 }
+
+#[cfg(test)]
+mod tests {
+
+    // Note this useful idiom: importing names from outer (for mod tests) scope.
+    use super::*;
+
+    #[test]
+    fn test_decrease_stats() {
+        let mut stats = Stats {
+            water: Stat::new(100.0),
+            food: Stat::new(100.0),
+            energy: Stat::new(100.0),
+            health: Stat::new(100.0),
+            is_sick: false,
+        };
+        decrease_stats(&mut stats, 60.0);
+        assert_eq!(stats.water.value, 80.0);
+        assert_eq!(stats.food.value, 90.0);
+        assert_eq!(stats.energy.value, 80.0);
+        assert_eq!(stats.health.value, 100.0);
+    }
+}
