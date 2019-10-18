@@ -1,7 +1,9 @@
 use std::fmt;
+use wasm_bindgen::prelude::*;
 
 const MAX: f64 = 100.0;
 
+#[wasm_bindgen]
 #[derive(Debug)]
 pub struct Stats {
     pub water: Stat,
@@ -10,7 +12,21 @@ pub struct Stats {
     pub health: Stat,
     pub is_sick: bool,
 }
+#[wasm_bindgen]
+impl Stats {
+    pub fn new() -> Stats {
+        Stats {
+            water: Stat::new(100.0),
+            food: Stat::new(100.0),
+            energy: Stat::new(100.0),
+            health: Stat::new(100.0),
+            is_sick: false,
+        }
+    }
+}
 
+#[wasm_bindgen]
+#[derive(Copy, Clone)]
 pub struct Stat {
     pub value: f64,
 }
@@ -21,6 +37,7 @@ impl fmt::Debug for Stat {
     }
 }
 
+#[wasm_bindgen]
 impl Stat {
     pub fn new(value: f64) -> Stat {
         Stat { value }
@@ -36,6 +53,7 @@ impl Stat {
     }
 }
 
+#[wasm_bindgen]
 pub fn decrease_stats(stats: &mut Stats, seconds: f64) {
     let ratio_energy = 20 as f64 / 60 as f64;
     let ratio_water = 20 as f64 / 60 as f64;
